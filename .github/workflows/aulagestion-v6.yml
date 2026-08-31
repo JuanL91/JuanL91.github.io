@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/aulagestion-v6.yml'
+      - '.github/aulagestion-v6.patch.tail'
 
 permissions:
   contents: write
@@ -35,8 +36,10 @@ jobs:
           assert hashlib.sha256(v5).hexdigest()=='7137671dd039b964a66e5154cfb0723a161c4b67f23ffba8e48c9490b6e0bc31'
           (root/'index.html').write_bytes(v5)
 
-          patch_b64=Path('.github/aulagestion-v6.patch.gz.b64').read_text(encoding='utf-8').strip()
+          patch_b64=Path('.github/aulagestion-v6.patch.gz.b64').read_text(encoding='utf-8').strip()+Path('.github/aulagestion-v6.patch.tail').read_text(encoding='utf-8').strip()
+          assert len(patch_b64)==12168, f'Parche Base64 incompleto: {len(patch_b64)}/12168'
           patch=gzip.decompress(base64.b64decode(patch_b64))
+          assert len(patch)==30555, f'Tamaño de parche inesperado: {len(patch)}/30555'
           Path('/tmp/aulagestion-v6.patch').write_bytes(patch)
           subprocess.run(['git','apply','/tmp/aulagestion-v6.patch'],check=True)
 
@@ -45,7 +48,7 @@ jobs:
           assert hashlib.sha256(v6).hexdigest()=='ca8bbd1743fc3297d4eb1099d2863756b7a571bacf54f33ac54e644454935065'
 
           text=v6.decode('utf-8')
-          scripts=re.findall(r'<script(?: [^>]*)?>([\\s\\S]*?)</script>',text)
+          scripts=re.findall(r'<script(?: [^>]*)?>([\s\S]*?)</script>',text)
           inline=[x for x in scripts if x.strip()]
           assert inline, 'No se encontró JavaScript interno'
           Path('/tmp/aulagestion-inline.js').write_text(inline[-1],encoding='utf-8')
