@@ -5,7 +5,6 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/aulagestion-v6.yml'
-      - '.github/aulagestion-v6.patch.tail'
 
 permissions:
   contents: write
@@ -36,10 +35,30 @@ jobs:
           assert hashlib.sha256(v5).hexdigest()=='7137671dd039b964a66e5154cfb0723a161c4b67f23ffba8e48c9490b6e0bc31'
           (root/'index.html').write_bytes(v5)
 
-          patch_b64=Path('.github/aulagestion-v6.patch.gz.b64').read_text(encoding='utf-8').strip()+Path('.github/aulagestion-v6.patch.tail').read_text(encoding='utf-8').strip()
+          expected_part_hashes=[
+            '73625a3b721796af60cea49638e4fdf0e1e80182091485faa894fe7e14215e56',
+            'fa98a73af8cc461ae31c666f0040d59f1f06ae36db21b8c1002f2b813175ed46',
+            'aff853372291b57050cd7155feaa6dc7c74ac05108e9171cde9a1a3d9e7e962e',
+            'afdaa16a40972e0347c25093ba093fdd0c5200f121ead4ce6caa0d55d5096152',
+            '6d61e8d0e70c6437a6475b4caf13b93b55feabe3388aa8413a3183c23bac503c',
+            '52194e4bc41e414d2ec4c2e51f60e1fb4c6d7d2de31ed27ed1237e41e30040d8',
+            '858fe1bc06b120d88378ee5357ea94483009076965dd28df9c3bdc02b42feb19'
+          ]
+          patch_parts=[]
+          for i,expected in enumerate(expected_part_hashes):
+            p=Path(f'.github/v6patch/part{i:02}.b64').read_text(encoding='utf-8').strip()
+            actual=hashlib.sha256(p.encode()).hexdigest()
+            assert actual==expected, f'Bloque {i:02} alterado: {actual}'
+            patch_parts.append(p)
+          patch_b64=''.join(patch_parts)
           assert len(patch_b64)==12168, f'Parche Base64 incompleto: {len(patch_b64)}/12168'
-          patch=gzip.decompress(base64.b64decode(patch_b64))
+          assert hashlib.sha256(patch_b64.encode()).hexdigest()=='31b2df88ea955960a3a5004778b18bba2217fe3c894af3555d359374a1dc7e8c'
+          patch_gz=base64.b64decode(patch_b64,validate=True)
+          assert len(patch_gz)==9126, f'Gzip de parche inesperado: {len(patch_gz)}/9126'
+          assert hashlib.sha256(patch_gz).hexdigest()=='a7f35de60a63d4d85ee98297be2ea9958a12e59c0843b68c0b2053bf058f2818'
+          patch=gzip.decompress(patch_gz)
           assert len(patch)==30555, f'Tamaño de parche inesperado: {len(patch)}/30555'
+          assert hashlib.sha256(patch).hexdigest()=='4a55d91f515069b629919aa7481a9e05396d0917023bbc38f8453451cafb3026'
           Path('/tmp/aulagestion-v6.patch').write_bytes(patch)
           subprocess.run(['git','apply','/tmp/aulagestion-v6.patch'],check=True)
 
@@ -77,6 +96,8 @@ jobs:
 
           node --check /tmp/aulagestion-inline.js
           rm -rf aulagestion-rd/app aulagestion-rd/parts aulagestion-rd/payload
+          rm -rf .github/v6patch .github/aulagestion-v6.patch.gz.b64 .github/aulagestion-v6.patch.tail
+          rm -f .github/workflows/aulagestion-v6.yml
 
       - name: Publicar V6 en main
         shell: bash
