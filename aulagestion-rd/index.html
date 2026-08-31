@@ -1,49 +1,1139 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#4f46e5">
-<title>AulaGestión RD</title>
-<style>
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f172a;display:grid;place-items:center;min-height:100vh}.box{max-width:520px;margin:24px;padding:28px;background:#fff;border:1px solid #e2e8f0;border-radius:18px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}.spinner{width:36px;height:36px;border:4px solid #e2e8f0;border-top-color:#4f46e5;border-radius:50%;margin:0 auto 16px;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}p{font-size:14px;color:#64748b;line-height:1.5}.err{color:#b91c1c}.small{font-size:12px;color:#94a3b8}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="description" content="AulaGestión RD - Gestión docente local-first para Técnico Profesional, Artes y Académica General.">
+  <title>AulaGestión RD V6 | Gestión Docente Integral</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body>
-<div class="box"><div class="spinner"></div><strong>Cargando AulaGestión RD…</strong><p id="status">Preparando la aplicación.</p><p class="small">Versión web · GitHub Pages · V5 exacta</p></div>
-<script>
-(async()=>{
- const status=document.getElementById('status');
- try{
-   const files=['app/pair0.txt','app/pair1.txt','app/pair2.txt','app/c06.txt','app/c07.txt','app/c08.txt','app/c09.txt','app/c10.txt','app/c11.txt','app/c12.txt','app/c13.txt'];
-   const parts=[];
-   for(let i=0;i<files.length;i++){
-     status.textContent=`Cargando componente ${i+1} de ${files.length}…`;
-     const r=await fetch(files[i]+'?v=v5-exact-1',{cache:'no-store'});
-     if(!r.ok) throw new Error(`${files[i]}: HTTP ${r.status}`);
-     parts.push(await r.text());
-   }
-   status.textContent='Verificando y abriendo…';
-   const b64=parts.join('').replace(/\s+/g,'');
-   if(b64.length!==53288) throw new Error(`Paquete incompleto (${b64.length}/53288).`);
-   if(!/^[A-Za-z0-9+/]*={0,2}$/.test(b64)) throw new Error('Paquete con caracteres no válidos.');
-   const bin=atob(b64);
-   if(bin.length!==39965) throw new Error(`Tamaño comprimido inesperado (${bin.length}/39965).`);
-   const bytes=new Uint8Array(bin.length);
-   for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-   if(!('DecompressionStream' in window)) throw new Error('Usa una versión actual de Chrome o Edge.');
-   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-   const html=await new Response(stream).text();
-   const utf8len=new TextEncoder().encode(html).length;
-   if(utf8len!==181377) throw new Error(`Aplicación incompleta (${utf8len}/181377 bytes).`);
-   if(!html.includes('AulaGestión RD')||!html.includes('IndexedDB')) throw new Error('La aplicación no superó la validación.');
-   document.open();document.write(html);document.close();
- }catch(e){
-   document.querySelector('.spinner')?.remove();
-   status.className='err';
-   status.textContent='No se pudo cargar AulaGestión. '+e.message;
- }
-})();
-</script>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen flex">
+
+  <div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="authGateTitle">
+    <div class="auth-card">
+      <div class="auth-logo"><i class="fa-solid fa-chalkboard-user"></i></div>
+      <span class="auth-kicker">AULAGESTIÓN RD</span>
+      <h1 id="authGateTitle">Acceso privado</h1>
+      <p class="auth-copy">Inicia sesión con una cuenta Google autorizada para abrir la gestión docente. Los datos locales y los respaldos de Drive permanecen separados por cuenta y dispositivo.</p>
+      <div id="authGateStatus" class="auth-status"><i class="fa-solid fa-shield-halved"></i><span>Verificando sesión…</span></div>
+      <button id="googleLoginButton" type="button" onclick="startGoogleLogin()" class="auth-google-btn" disabled><i class="fa-brands fa-google"></i><span>Iniciar sesión con Google</span></button>
+      <div class="auth-security-note"><i class="fa-solid fa-lock"></i><span>Solo se habilita la interfaz después de validar una cuenta autorizada. El Client ID identifica la app; no es una contraseña.</span></div>
+      <p class="auth-small">La autenticación necesita conexión a Internet. Si la conexión se pierde después de iniciar sesión, puedes seguir trabajando localmente.</p>
+    </div>
+  </div>
+
+  <aside class="w-16 md:w-20 bg-white border-r border-slate-200 min-h-screen flex flex-col items-center py-4 gap-5 z-20 shadow-sm sticky top-0 h-screen overflow-y-auto">
+    <div class="w-11 h-11 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md" title="AulaGestión RD">
+      <i class="fa-solid fa-chalkboard-user"></i>
+    </div>
+    <hr class="w-10 border-slate-200">
+    <nav class="flex flex-col gap-2 text-slate-400">
+      <button onclick="showSection('dashboard')" id="nav-dashboard" title="Dashboard" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition text-indigo-600 bg-indigo-50"><i class="fa-solid fa-house text-lg"></i></button>
+      <button onclick="showSection('academico')" id="nav-academico" title="Modalidades, grados y secciones" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-layer-group text-lg"></i></button>
+      <button onclick="showSection('materias')" id="nav-materias" title="Materias y módulos formativos" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-book-open text-lg"></i></button>
+      <button onclick="showSection('ficha')" id="nav-ficha" title="Ficha docente por materia o módulo" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-folder-open text-lg"></i></button>
+      <button onclick="showSection('estudiantes')" id="nav-estudiantes" title="Estudiantes y matrícula" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-users text-lg"></i></button>
+      <button onclick="showSection('calendario')" id="nav-calendario" title="Calendario escolar" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-calendar-days text-lg"></i></button>
+      <button onclick="showSection('asistencia')" id="nav-asistencia" title="Asistencia" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-user-check text-lg"></i></button>
+      <button onclick="showSection('actividades')" id="nav-actividades" title="Actividades y evidencias" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-list-check text-lg"></i></button>
+      <button onclick="showSection('evaluacion')" id="nav-evaluacion" title="RA y competencias" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-clipboard-check text-lg"></i></button>
+      <button onclick="showSection('seguimiento')" id="nav-seguimiento" title="Bitácora, instrumentos y convivencia" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-book-journal-whills text-lg"></i></button>
+      <button onclick="showSection('seguridad')" id="nav-seguridad" title="Seguridad y acceso" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-shield-halved text-lg"></i></button>
+      <button onclick="showSection('nube')" id="nav-nube" title="Nube y respaldos" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-cloud-arrow-up text-lg"></i></button>
+    </nav>
+  </aside>
+
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="min-h-16 bg-white border-b border-slate-200 px-4 md:px-8 py-3 flex flex-wrap items-center justify-between gap-3 shadow-sm sticky top-0 z-10">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-extrabold text-slate-800">AulaGestión RD</span>
+          <span class="text-[10px] uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-100">V6 · acceso privado + seguridad</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">Técnico Profesional · Modalidad en Artes · Académica General</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <div id="authUserChip" class="hidden items-center gap-2 border border-slate-200 rounded-full pl-1.5 pr-2 py-1 bg-white shadow-sm">
+          <img id="authUserAvatar" alt="" class="w-7 h-7 rounded-full bg-slate-100 object-cover">
+          <div class="hidden md:block leading-tight max-w-40"><strong id="authUserName" class="block text-[11px] truncate">Usuario</strong><span id="authUserRole" class="block text-[9px] text-slate-400 truncate">Administrador</span></div>
+          <button type="button" onclick="lockApplication()" class="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-500" title="Bloquear AulaGestión"><i class="fa-solid fa-lock"></i></button>
+        </div>
+        <button onclick="showSection('nube')" id="cloudStatusButton" class="status-pill status-local" title="Estado del respaldo"><i class="fa-solid fa-hard-drive"></i><span id="cloudStatusText">Guardado local</span></button>
+        <label class="font-semibold text-slate-500 hidden sm:inline">Año escolar</label>
+        <input id="schoolYear" value="2026-2027" class="w-24 p-2 border rounded-lg bg-white font-semibold text-indigo-700" onchange="saveYear()">
+        <button onclick="exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-semibold transition" title="Exportar a Excel"><i class="fa-solid fa-file-excel mr-1"></i><span class="hidden sm:inline">Excel</span></button>
+        <button onclick="backupJSON()" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg font-semibold transition" title="Descargar respaldo"><i class="fa-solid fa-download mr-1"></i><span class="hidden sm:inline">Backup</span></button>
+      </div>
+    </header>
+
+    <main id="section-dashboard" class="section p-5 md:p-8 space-y-7 flex-1 overflow-y-auto">
+      <div>
+        <span class="text-xs font-bold text-indigo-600 tracking-wider uppercase">AULAGESTIÓN RD</span>
+        <h1 class="text-2xl font-bold text-slate-800">Panel docente</h1>
+        <p class="text-xs text-slate-500">Tus datos se guardan primero en este dispositivo. La nube funciona como respaldo y sincronización opcional.</p>
+      </div>
+
+      <div id="offlineNotice" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+        <i class="fa-solid fa-wifi mr-2"></i>Estás sin conexión. Puedes seguir trabajando; los cambios quedan guardados localmente.
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+        <div class="metric-card"><div><span id="card-estudiantes-count" class="metric-number">0</span><p class="metric-label">Estudiantes</p></div><div class="metric-icon bg-indigo-50 text-indigo-600"><i class="fa-solid fa-users"></i></div></div>
+        <div class="metric-card"><div><span id="card-modalidades-count" class="metric-number">0</span><p class="metric-label">Modalidades</p></div><div class="metric-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-swatchbook"></i></div></div>
+        <div class="metric-card"><div><span id="card-secciones-count" class="metric-number">0</span><p class="metric-label">Grupos / secciones</p></div><div class="metric-icon bg-amber-50 text-amber-600"><i class="fa-solid fa-shapes"></i></div></div>
+        <div class="metric-card"><div><span id="card-materias-count" class="metric-number">0</span><p class="metric-label">Materias / módulos</p></div><div class="metric-icon bg-emerald-50 text-emerald-600"><i class="fa-solid fa-book-open"></i></div></div>
+        <div class="metric-card"><div><span id="card-evaluaciones-count" class="metric-number">0</span><p class="metric-label">Evaluaciones</p></div><div class="metric-icon bg-sky-50 text-sky-600"><i class="fa-solid fa-clipboard-check"></i></div></div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="panel">
+          <div class="panel-title"><i class="fa-solid fa-chart-simple text-indigo-600"></i><div><h3>Estudiantes por grupo</h3><p>Distribución de matrícula por curso y sección.</p></div></div>
+          <div class="h-72"><canvas id="chartMatricula"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><i class="fa-solid fa-chart-pie text-indigo-600"></i><div><h3>Oferta por modalidad</h3><p>Cantidad de materias o módulos registrados.</p></div></div>
+          <div class="h-72"><canvas id="chartMaterias"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel border-l-4 border-l-sky-500">
+        <div class="flex flex-wrap items-start justify-between gap-3"><div class="panel-title !border-0 !p-0 !m-0"><i class="fa-solid fa-shield-halved text-sky-600"></i><div><h3>Integridad de datos</h3><p>Detecta duplicados, registros huérfanos, numeración repetida y ponderaciones incompletas.</p></div></div><span id="integrityCount" class="badge">0 alertas</span></div>
+        <div id="integrityIssues" class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4 text-xs"></div>
+      </div>
+
+      <div class="panel border-l-4 border-l-amber-400">
+        <div class="panel-title"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i><div><h3>Control de calidad de la integración</h3><p>Hallazgos conservados para revisión, sin corregir silenciosamente los libros fuente.</p></div></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div class="rounded-lg border bg-slate-50 p-3"><strong>Actividades vs. calendario:</strong> <span id="sourceConflictCount">0</span> actividades importadas están programadas en fechas no lectivas y se muestran con advertencia.</div>
+          <div class="rounded-lg border bg-slate-50 p-3"><strong>MF_632_3:</strong> la hoja de reporte usa ese código, pero su celda de nombre muestra “Retoque y tratamiento de imágenes”. La app conserva el código y no sustituye automáticamente el nombre del módulo.</div>
+          <div class="rounded-lg border bg-slate-50 p-3"><strong>Práctica 6TO:</strong> no se precargó porque las fechas encontradas pertenecen a 2025; queda pendiente de actualización al calendario 2026-2027.</div>
+          <div class="rounded-lg border bg-slate-50 p-3"><strong>Cuadernos:</strong> se integró la rúbrica 3+3+4; las celdas con errores de fórmula del archivo original no se trasladaron como datos.</div>
+        </div>
+      </div>
+    </main>
+
+    <main id="section-academico" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div><h1 class="text-2xl font-bold">Estructura académica</h1><p class="text-xs text-slate-500">Organiza Modalidad → Especialidad/Mención → Grado → Sección.</p></div>
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="panel">
+          <h2 class="form-title"><i class="fa-solid fa-plus-circle text-indigo-600"></i> Registrar grupo</h2>
+          <form id="cursoForm" class="space-y-3">
+            <div><label class="label">Modalidad</label><select id="curModalidad" class="field"><option>Técnico Profesional</option><option>Modalidad en Artes</option><option>Académica General</option></select></div>
+            <div><label class="label">Grado</label><select id="curGrado" class="field"><option>1ro Secundaria</option><option>2do Secundaria</option><option>3ro Secundaria</option><option>4to Secundaria</option><option>5to Secundaria</option><option>6to Secundaria</option></select></div>
+            <div><label class="label">Especialidad / Mención / Programa</label><input id="curEspecialidad" class="field" required placeholder="Ej. Bachillerato Técnico en Multimedia"></div>
+            <div><label class="label">Sección</label><input id="curSeccion" class="field" required placeholder="Ej. A, B, H o Única"></div>
+            <button class="primary-btn" type="submit">+ Guardar grupo</button>
+          </form>
+        </div>
+        <div class="xl:col-span-2 panel">
+          <div class="flex items-center justify-between gap-3 mb-4"><h2 class="font-bold">Grupos registrados</h2><input id="filterCursos" oninput="renderCursos()" class="field max-w-xs" placeholder="Buscar..."></div>
+          <div class="overflow-x-auto"><table class="table"><thead><tr><th>Modalidad</th><th>Grado / programa</th><th>Sección</th><th class="text-right">Acciones</th></tr></thead><tbody id="tableCursosBody"></tbody></table></div>
+        </div>
+      </div>
+    </main>
+
+    <main id="section-materias" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div><h1 class="text-2xl font-bold">Materias y módulos</h1><p class="text-xs text-slate-500">Registra módulos formativos de Técnico Profesional y asignaturas de Artes o Académica General.</p></div>
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="panel">
+          <h2 class="form-title"><i class="fa-solid fa-book-medical text-indigo-600"></i> Nueva materia / módulo</h2>
+          <form id="materiaForm" class="space-y-3">
+            <div><label class="label">Grupo al que pertenece</label><select id="matCurso" class="field" required></select></div>
+            <div><label class="label">Tipo</label><select id="matTipo" class="field"><option>Módulo Formativo</option><option>Asignatura</option><option>Taller</option><option>Proyecto</option></select></div>
+            <div><label class="label">Código</label><input id="matCodigo" class="field" placeholder="Ej. MF_629_3"></div>
+            <div><label class="label">Nombre</label><input id="matNombre" class="field" required placeholder="Nombre de la materia o módulo"></div>
+            <div class="grid grid-cols-2 gap-3"><div><label class="label">Horas/semana</label><input id="matHoras" type="number" min="0" step="1" class="field" placeholder="Ej. 6"></div><div><label class="label">Ponderación total</label><input id="matPonderacion" type="number" min="0" max="100" class="field" value="100"></div></div>
+            <button class="primary-btn" type="submit">+ Guardar materia / módulo</button>
+          </form>
+        </div>
+        <div class="xl:col-span-2 panel">
+          <div class="flex items-center justify-between gap-3 mb-4"><h2 class="font-bold">Oferta registrada</h2><input id="filterMaterias" oninput="renderMaterias()" class="field max-w-xs" placeholder="Buscar código o nombre..."></div>
+          <div class="overflow-x-auto"><table class="table"><thead><tr><th>Código</th><th>Materia / módulo</th><th>Grupo</th><th>Tipo</th><th class="text-right">Acciones</th></tr></thead><tbody id="tableMateriasBody"></tbody></table></div>
+        </div>
+      </div>
+    </main>
+
+    <main id="section-ficha" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div><h1 class="text-2xl font-bold">Ficha docente por materia / módulo</h1><p class="text-xs text-slate-500">Vista unificada de matrícula, evaluación, asistencia, actividades, instrumentos, bitácora y calendario.</p></div>
+        <div class="flex flex-wrap gap-2 items-end">
+          <div class="min-w-72"><label class="label">Materia / módulo</label><select id="workspaceMateria" class="field" onchange="renderWorkspace()"></select></div>
+          <button onclick="exportWorkspaceExcel()" class="secondary-btn !w-auto px-4"><i class="fa-solid fa-file-excel mr-2"></i>Exportar ficha</button>
+        </div>
+      </div>
+      <div id="workspaceEmpty" class="panel text-sm text-slate-500">Selecciona una materia o módulo para abrir su ficha.</div>
+      <div id="workspaceContent" class="space-y-6 hidden">
+        <div class="panel">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div><span id="wsType" class="badge"></span><h2 id="wsTitle" class="text-xl font-extrabold mt-2"></h2><p id="wsSubtitle" class="text-xs text-slate-500 mt-1"></p></div>
+            <div class="flex flex-wrap gap-2"><button onclick="workspaceGo('asistencia')" class="secondary-btn !w-auto px-3">Asistencia</button><button onclick="workspaceGo('actividades')" class="secondary-btn !w-auto px-3">Actividades</button><button onclick="workspaceGo('evaluacion')" class="primary-btn !w-auto px-3">Evaluar</button></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div class="mini-stat"><span>Estudiantes</span><strong id="wsStudents">0</strong></div>
+          <div class="mini-stat"><span>Actividades</span><strong id="wsActivities">0</strong></div>
+          <div class="mini-stat"><span>Registros asistencia</span><strong id="wsAttendance">0</strong></div>
+          <div class="mini-stat"><span id="wsProgressLabel">Progreso</span><strong id="wsProgress">—</strong></div>
+          <div class="mini-stat"><span>Conflictos calendario</span><strong id="wsConflicts">0</strong></div>
+        </div>
+        <div class="panel">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div><h2 class="font-bold">Matrícula y progreso</h2><p id="wsEvaluationHint" class="text-xs text-slate-500"></p></div><input id="workspaceSearch" oninput="renderWorkspaceRoster()" class="field max-w-xs" placeholder="Buscar estudiante..."></div>
+          <div class="overflow-x-auto"><table class="table"><thead id="wsRosterHead"></thead><tbody id="wsRosterBody"></tbody></table></div>
+        </div>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div class="panel"><h2 class="font-bold mb-3">Próximas actividades y fechas</h2><div id="wsUpcoming" class="space-y-2"></div></div>
+          <div class="panel"><h2 class="font-bold mb-3">Bitácora reciente</h2><div id="wsLogs" class="space-y-2"></div></div>
+        </div>
+        <div class="panel"><div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div><h2 class="font-bold">Instrumentos disponibles</h2><p class="text-xs text-slate-500">Muestra instrumentos vinculados a esta materia y los instrumentos generales reutilizables.</p></div><button onclick="workspaceGo('seguimiento')" class="secondary-btn !w-auto px-3">Administrar instrumentos</button></div><div id="wsInstruments" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div></div>
+      </div>
+    </main>
+
+    <main id="section-estudiantes" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div><h1 class="text-2xl font-bold">Estudiantes y matrícula</h1><p class="text-xs text-slate-500">Matricula estudiantes en sus grupos y secciones correspondientes.</p></div>
+      <div class="panel border-l-4 border-l-indigo-500">
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-4"><div><h2 class="font-extrabold"><i class="fa-solid fa-paste text-indigo-600 mr-2"></i>Matrícula masiva desde una lista</h2><p class="text-xs text-slate-500 mt-1">Pega nombres desde Excel, Word o WhatsApp. La lista completa se asignará al grado y sección que selecciones.</p></div><span id="bulkCount" class="badge">0 detectados</span></div>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
+          <div><label class="label">Modalidad</label><select id="bulkModalidad" class="field" onchange="syncBulkGrades()"></select></div>
+          <div><label class="label">Grado</label><select id="bulkGrado" class="field" onchange="syncBulkCourses()"></select></div>
+          <div class="lg:col-span-2"><label class="label">Grupo / sección destino</label><select id="bulkCourse" class="field" onchange="renderBulkDestination();previewBulkStudents()"></select><p id="bulkDestination" class="text-[11px] text-slate-500 mt-1"></p></div>
+          <div class="lg:col-span-4"><label class="label">Lista de estudiantes</label><textarea id="bulkStudents" class="field min-h-40 font-mono" oninput="previewBulkStudents()" placeholder="Ejemplos:
+1	Ana Pérez
+2	Carlos Martínez
+María Gómez
+José Rodríguez"></textarea></div>
+        </div>
+        <div class="flex flex-wrap gap-4 mt-3 text-xs"><label class="flex items-center gap-2"><input id="bulkAutoNumber" type="checkbox" checked onchange="previewBulkStudents()"> Numerar automáticamente si no trae número</label><label class="flex items-center gap-2"><input id="bulkSkipDuplicates" type="checkbox" checked onchange="previewBulkStudents()"> Omitir duplicados del mismo grupo</label></div>
+        <div id="bulkWarnings" class="mt-3"></div>
+        <div class="overflow-x-auto max-h-64 mt-3"><table class="table"><thead><tr><th>No.</th><th>Nombre detectado</th><th>Estado</th></tr></thead><tbody id="bulkPreviewBody"><tr><td colspan="3" class="text-center text-slate-400">Pega una lista para previsualizar.</td></tr></tbody></table></div>
+        <div class="flex flex-wrap gap-2 mt-4"><button type="button" onclick="importBulkStudents()" class="primary-btn !w-auto px-5"><i class="fa-solid fa-users-line mr-2"></i>Matricular lista</button><button type="button" onclick="clearBulkStudents()" class="secondary-btn !w-auto px-4">Limpiar</button></div>
+      </div>
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="panel">
+          <h2 class="form-title"><i class="fa-solid fa-user-plus text-indigo-600"></i> Matricular estudiante</h2>
+          <form id="studentForm" class="space-y-3">
+            <div><label class="label">Nombre completo</label><input id="stNombre" class="field" required placeholder="Nombre del estudiante"></div>
+            <div><label class="label">ID / número de lista</label><input id="stNumero" class="field" placeholder="Opcional"></div>
+            <div><label class="label">Curso y sección</label><select id="stCursoSeccion" class="field" required></select></div>
+            <button class="primary-btn" type="submit">Matricular estudiante</button>
+          </form>
+        </div>
+        <div class="xl:col-span-2 panel">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><h2 class="font-bold">Listado de matrícula</h2><div class="flex flex-wrap gap-2"><select id="filterStudentsCourse" onchange="renderStudents()" class="field max-w-sm"><option value="">Todos los grupos</option></select><input id="filterStudents" oninput="renderStudents()" class="field max-w-xs" placeholder="Buscar estudiante..."></div></div>
+          <div class="overflow-x-auto"><table class="table"><thead><tr><th>Estudiante</th><th>Grupo</th><th>Modalidad</th><th class="text-right">Acciones</th></tr></thead><tbody id="tableStudentsBody"></tbody></table></div>
+        </div>
+      </div>
+    </main>
+
+    <main id="section-calendario" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold">Calendario escolar 2026-2027</h1>
+          <p class="text-xs text-slate-500">Calendario académico integrado con actividades, reportes, recuperaciones y días no lectivos.</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="moveCalendarMonth(-1)" class="secondary-btn !w-auto px-3"><i class="fa-solid fa-chevron-left"></i></button>
+          <input id="calendarMonth" type="month" min="2026-08" max="2027-06" value="2026-08" class="field !w-auto" onchange="renderCalendar()">
+          <button onclick="moveCalendarMonth(1)" class="secondary-btn !w-auto px-3"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="mini-stat"><span>Inicio estudiantes</span><strong>24/08/2026</strong></div>
+        <div class="mini-stat"><span>Fin estudiantes</span><strong>18/06/2027</strong></div>
+        <div class="mini-stat"><span>Días lectivos oficiales</span><strong>190 días · 40 semanas</strong></div>
+        <div class="mini-stat"><span>Banco preventivo</span><strong>Hasta 26/06/2027 si aplica</strong></div>
+      </div>
+
+      <div class="panel">
+        <div class="flex flex-wrap gap-2 text-[11px] mb-4">
+          <span class="cal-legend bg-indigo-100 text-indigo-800">Evento MINERD</span>
+          <span class="cal-legend bg-emerald-100 text-emerald-800">Actividad docente</span>
+          <span class="cal-legend bg-amber-100 text-amber-800">Evaluación / reporte</span>
+          <span class="cal-legend bg-rose-100 text-rose-800">No lectivo</span>
+          <span class="cal-legend bg-sky-100 text-sky-800">Recuperación</span>
+        </div>
+        <div class="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded-xl overflow-hidden text-xs">
+          <div class="cal-head">Lun</div><div class="cal-head">Mar</div><div class="cal-head">Mié</div><div class="cal-head">Jue</div><div class="cal-head">Vie</div><div class="cal-head">Sáb</div><div class="cal-head">Dom</div>
+          <div id="calendarGrid" class="contents"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="panel">
+          <h2 class="form-title"><i class="fa-solid fa-calendar-plus text-indigo-600"></i> Agregar evento del centro</h2>
+          <form id="calendarForm" class="space-y-3">
+            <div class="grid grid-cols-2 gap-3"><div><label class="label">Inicio</label><input id="calDate" type="date" class="field" required></div><div><label class="label">Fin</label><input id="calEndDate" type="date" class="field"></div></div>
+            <div><label class="label">Título</label><input id="calTitle" class="field" required placeholder="Ej. Reunión, entrega, acto escolar"></div>
+            <div><label class="label">Categoría</label><select id="calCategory" class="field"><option value="centro">Centro educativo</option><option value="evaluacion">Evaluación / reporte</option><option value="recuperacion">Recuperación</option><option value="actividad">Actividad</option><option value="nolectivo">No lectivo</option></select></div>
+            <label class="flex items-center gap-2 text-xs"><input id="calNoClass" type="checkbox"> Este evento suspende la docencia / asistencia</label>
+            <button class="primary-btn" type="submit">Guardar evento</button>
+          </form>
+        </div>
+        <div class="xl:col-span-2 panel">
+          <div class="flex items-center justify-between gap-3 mb-4"><div><h2 class="font-bold">Agenda del mes</h2><p class="text-xs text-slate-500">Incluye calendario oficial y actividades programadas.</p></div></div>
+          <div id="calendarEventsList" class="space-y-2"></div>
+        </div>
+      </div>
+      <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-xs text-indigo-900">
+        <strong>Regla de la app:</strong> la asistencia solo se habilita automáticamente en días lectivos. Un evento personalizado puede marcarse como “no lectivo”; las actividades que caigan en vacaciones o días no lectivos se muestran con advertencia para revisión.
+      </div>
+    </main>
+
+    <main id="section-asistencia" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div><h1 class="text-2xl font-bold">Asistencia</h1><p class="text-xs text-slate-500">Integra el registro P / A / T / E y el cálculo mensual de la plantilla de asistencia.</p></div>
+      <div class="panel">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div><label class="label">Grupo / sección</label><select id="attCourse" class="field" onchange="renderAttendance()"></select></div>
+          <div><label class="label">Fecha</label><input id="attDate" type="date" class="field" onchange="renderAttendance()"></div>
+          <label class="flex items-center gap-2 rounded-lg border p-3 text-xs bg-slate-50"><input id="attOverride" type="checkbox" onchange="renderAttendance()"> Permitir registro extraordinario</label>
+          <div class="flex gap-2"><button onclick="markAllAttendance('P')" class="secondary-btn">Todos P</button><button onclick="saveAttendance()" class="primary-btn">Guardar</button></div>
+        </div>
+        <div id="attDayNotice" class="mt-4 text-xs"></div>
+      </div>
+
+      <div class="panel">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div><h2 class="font-bold">Registro del día</h2><p class="text-xs text-slate-500">P=Presente · A=Ausente · T=Tardanza · E=Excusa.</p></div>
+          <div class="text-[11px] text-slate-500">La tasa mensual conserva el ajuste de la hoja: con 3 o más tardanzas se descuenta 1 asistencia efectiva.</div>
+        </div>
+        <div class="overflow-x-auto"><table class="table"><thead><tr><th>No.</th><th>Estudiante</th><th>Estado</th><th>Observación</th></tr></thead><tbody id="attRosterBody"></tbody></table></div>
+      </div>
+
+      <div class="panel">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div><h2 class="font-bold">Resumen mensual</h2><p class="text-xs text-slate-500">Se calcula para el mes de la fecha seleccionada.</p></div>
+        </div>
+        <div class="overflow-x-auto"><table class="table"><thead><tr><th>Estudiante</th><th>P</th><th>A</th><th>T</th><th>E</th><th>Registros</th><th>% efectivo</th></tr></thead><tbody id="attSummaryBody"></tbody></table></div>
+      </div>
+    </main>
+
+    <main id="section-actividades" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div><h1 class="text-2xl font-bold">Actividades y evidencias</h1><p class="text-xs text-slate-500">Centraliza las prácticas que antes estaban distribuidas por columnas en los libros de didáctica.</p></div>
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="panel">
+          <h2 class="form-title"><i class="fa-solid fa-list-check text-indigo-600"></i> Nueva actividad</h2>
+          <form id="activityForm" class="space-y-3">
+            <div><label class="label">Materia / módulo</label><select id="actMateria" class="field" required onchange="syncActivityRA()"></select></div>
+            <div class="grid grid-cols-2 gap-3"><div><label class="label">Fecha</label><input id="actDate" type="date" class="field" required></div><div><label class="label">Puntos</label><input id="actPoints" type="number" min="0" step="0.5" class="field" value="1"></div></div>
+            <div class="grid grid-cols-2 gap-3"><div><label class="label">Código</label><input id="actCode" class="field" placeholder="ACT-01"></div><div><label class="label">RA</label><select id="actRA" class="field"><option value="">Sin vincular</option></select></div></div>
+            <div><label class="label">Tipo</label><select id="actType" class="field"><option>Actividad</option><option>Práctica</option><option>Proyecto</option><option>Prueba</option><option>Portafolio</option><option>Exposición</option></select></div>
+            <div><label class="label">Descripción</label><textarea id="actTitle" class="field min-h-24" required placeholder="Qué realizará el estudiante"></textarea></div>
+            <button class="primary-btn" type="submit">Guardar actividad</button>
+          </form>
+        </div>
+        <div class="xl:col-span-2 panel">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div><h2 class="font-bold">Plan de actividades</h2><p class="text-xs text-slate-500"><span id="legacyActivityCount">0</span> actividades migradas desde las hojas de prácticas.</p></div>
+            <select id="filterActivityMateria" class="field max-w-sm" onchange="renderActivities()"><option value="">Todas</option></select>
+          </div>
+          <div class="overflow-x-auto max-h-[650px]"><table class="table"><thead class="sticky top-0"><tr><th>Fecha</th><th>Código</th><th>Actividad</th><th>Módulo</th><th>Puntos</th><th>RA</th><th>Calendario</th><th></th></tr></thead><tbody id="activityTableBody"></tbody></table></div>
+        </div>
+      </div>
+      <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+        <strong>Importación controlada:</strong> se integraron las actividades 2026-2027 de <em>Pratica 3ros</em> y <em>Practica 5TO</em>. Las actividades de <em>Practica 6TO</em> no se precargan porque la hoja inspeccionada conserva fechas de 2025; se evita mezclarlas automáticamente con el año escolar 2026-2027.
+      </div>
+    </main>
+
+    <main id="section-evaluacion" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div><h1 class="text-2xl font-bold">Evaluación: RA y competencias</h1><p class="text-xs text-slate-500">Dos motores distintos: Técnico Profesional por Resultados de Aprendizaje y componente académico/Artes por competencias y períodos.</p></div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="panel border-t-4 border-t-indigo-500">
+          <div class="mb-4"><h2 class="font-extrabold">Técnico Profesional · Resultados de Aprendizaje</h2><p class="text-xs text-slate-500">C.R.A + RP1 + RP2. Se conserva el mejor resultado de cada RA y el mínimo equivale al 70 % del peso del RA.</p></div>
+          <form id="raForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><label class="label">Estudiante</label><select id="raStudent" class="field" required onchange="syncRAMaterias()"></select></div>
+            <div><label class="label">Módulo</label><select id="raMateria" class="field" required onchange="syncRADefs()"></select></div>
+            <div class="md:col-span-2"><label class="label">Resultado de aprendizaje</label><select id="raDef" class="field" required onchange="updateRALimits()"></select></div>
+            <div><label class="label">C.R.A.</label><input id="raCRA" type="number" min="0" step="0.5" class="field" required></div>
+            <div><label class="label">RP1</label><input id="raRP1" type="number" min="0" step="0.5" class="field"></div>
+            <div><label class="label">RP2</label><input id="raRP2" type="number" min="0" step="0.5" class="field"></div>
+            <div class="flex items-end"><button type="submit" class="primary-btn">Guardar RA</button></div>
+          </form>
+          <div id="raRuleNote" class="mt-3 text-xs text-slate-500"></div>
+        </div>
+
+        <div class="panel border-t-4 border-t-purple-500">
+          <div class="mb-4"><h2 class="font-extrabold">Académica / Artes · Competencias</h2><p class="text-xs text-slate-500">P1-P4 con recuperación pedagógica por competencia. Se integran las siete competencias del formulario RPG.</p></div>
+          <form id="compForm" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><label class="label">Estudiante</label><select id="compStudent" class="field" required onchange="syncCompMaterias()"></select></div>
+            <div><label class="label">Asignatura</label><select id="compMateria" class="field" required></select></div>
+            <div><label class="label">Período</label><select id="compPeriod" class="field"><option>P1</option><option>P2</option><option>P3</option><option>P4</option></select></div>
+            <div><label class="label">Competencia</label><select id="compName" class="field"></select></div>
+            <div><label class="label">Calificación</label><input id="compScore" type="number" min="0" max="100" class="field" required></div>
+            <div><label class="label">Recuperación pedagógica</label><input id="compRecovery" type="number" min="0" max="100" class="field"></div>
+            <div class="md:col-span-2"><button type="submit" class="primary-btn">Guardar competencia</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div><h2 class="font-bold">Reporte del módulo por RA</h2><p class="text-xs text-slate-500">Final = suma del mejor valor obtenido en cada RA, una vez completados todos.</p></div><select id="raFilterMateria" class="field max-w-sm" onchange="renderRAReport()"></select></div>
+        <div class="overflow-x-auto"><table class="table"><thead><tr><th>Estudiante</th><th>RA y recuperaciones</th><th>RA completos</th><th>Total</th><th>Situación</th></tr></thead><tbody id="raResultsBody"></tbody></table></div>
+      </div>
+
+      <div class="panel">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div><h2 class="font-bold">Matriz de competencias</h2><p class="text-xs text-slate-500">Agrupación: C1 Comunicativa · C2 Pensamiento/Resolución · C3 Ética/Desarrollo personal · C4 Científica/Ambiental.</p></div><div class="flex gap-2"><select id="compFilterStudent" class="field" onchange="renderCompetencyMatrix()"></select><select id="compFilterMateria" class="field" onchange="renderCompetencyMatrix()"></select></div></div>
+        <div id="compMatrix" class="overflow-x-auto"></div>
+      </div>
+
+      <details class="panel">
+        <summary class="font-bold cursor-pointer">Configurar resultados de aprendizaje</summary>
+        <form id="raConfigForm" class="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
+          <div><label class="label">Módulo</label><select id="raCfgMateria" class="field"></select></div>
+          <div><label class="label">Código</label><input id="raCfgCode" class="field" placeholder="RA1"></div>
+          <div class="md:col-span-2"><label class="label">Descripción</label><input id="raCfgDescription" class="field" placeholder="Descripción del RA"></div>
+          <div><label class="label">Peso (pts)</label><input id="raCfgWeight" type="number" min="1" max="100" class="field"></div>
+          <div class="md:col-span-5"><button class="primary-btn" type="submit">Agregar / actualizar RA</button></div>
+        </form>
+        <div id="raConfigList" class="mt-4 flex flex-wrap gap-2"></div>
+      </details>
+    </main>
+
+    <main id="section-seguimiento" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div><h1 class="text-2xl font-bold">Seguimiento pedagógico</h1><p class="text-xs text-slate-500">Bitácora de temas, instrumentos reutilizables y convivencia.</p></div>
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="panel">
+          <h2 class="form-title"><i class="fa-solid fa-book-open-reader text-indigo-600"></i> Bitácora / tema trabajado</h2>
+          <form id="logForm" class="space-y-3">
+            <div class="grid grid-cols-2 gap-3"><div><label class="label">Fecha</label><input id="logDate" type="date" class="field" required></div><div><label class="label">Grupo</label><select id="logCourse" class="field" required onchange="syncLogMaterias()"></select></div></div>
+            <div><label class="label">Materia / módulo</label><select id="logMateria" class="field"></select></div>
+            <div><label class="label">Tema trabajado</label><input id="logTopic" class="field" required></div>
+            <div><label class="label">Observaciones</label><textarea id="logNotes" class="field min-h-20"></textarea></div>
+            <button class="primary-btn" type="submit">Guardar bitácora</button>
+          </form>
+          <div class="overflow-x-auto max-h-72 mt-4"><table class="table"><thead><tr><th>Fecha</th><th>Grupo</th><th>Tema</th><th></th></tr></thead><tbody id="logBody"></tbody></table></div>
+        </div>
+        <div class="panel">
+          <h2 class="form-title"><i class="fa-solid fa-scale-balanced text-indigo-600"></i> Convivencia / conducta</h2>
+          <form id="conductForm" class="space-y-3">
+            <div><label class="label">Estudiante</label><select id="conductStudent" class="field" required></select></div>
+            <div class="grid grid-cols-2 gap-3"><div><label class="label">Fecha</label><input id="conductDate" type="date" class="field" required></div><div><label class="label">Puntos</label><input id="conductPoints" type="number" step="1" class="field" value="-1"></div></div>
+            <div><label class="label">Situación / criterio</label><select id="conductType" class="field"><option>Interrumpe el proceso de clase</option><option>Irrespeto al docente o compañeros</option><option>Agresión verbal</option><option>Incumplimiento de normas</option><option>Reconocimiento positivo</option><option>Otro</option></select></div>
+            <div><label class="label">Observación</label><textarea id="conductNotes" class="field min-h-20"></textarea></div>
+            <button class="primary-btn" type="submit">Registrar</button>
+          </form>
+          <div class="overflow-x-auto max-h-72 mt-4"><table class="table"><thead><tr><th>Fecha</th><th>Estudiante</th><th>Situación</th><th>Puntos</th><th></th></tr></thead><tbody id="conductBody"></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div><h2 class="font-bold">Instrumentos reutilizables</h2><p class="text-xs text-slate-500">Incluye las estructuras detectadas en Participación y Cuadernos.</p></div></div>
+        <div id="instrumentCards" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+        <details class="mt-4">
+          <summary class="font-bold cursor-pointer text-sm">Crear instrumento personalizado</summary>
+          <form id="instrumentForm" class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+            <div><label class="label">Nombre</label><input id="insName" class="field" required></div>
+            <div><label class="label">Tipo</label><select id="insType" class="field"><option>Rúbrica</option><option>Lista de cotejo</option><option>Escala</option><option>Guía de observación</option></select></div>
+            <div><label class="label">Valor total</label><input id="insTotal" type="number" class="field" value="10"></div>
+            <div><label class="label">Materia / módulo</label><select id="insMateria" class="field"><option value="">General / reutilizable</option></select></div>
+            <div class="md:col-span-4"><label class="label">Criterios (uno por línea; opcionalmente “Criterio|máximo”)</label><textarea id="insCriteria" class="field min-h-24"></textarea></div>
+            <div class="md:col-span-4"><button class="primary-btn" type="submit">Guardar instrumento</button></div>
+          </form>
+        </details>
+      </div>
+    </main>
+
+    <main id="section-seguridad" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div><span class="text-xs font-bold text-indigo-600 tracking-wider uppercase">SEGURIDAD</span><h1 class="text-2xl font-bold text-slate-800">Acceso y sesión</h1><p class="text-xs text-slate-500">Controla la sesión de AulaGestión y revisa la política de acceso de esta instalación.</p></div>
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="panel">
+          <div class="panel-title"><i class="fa-solid fa-user-shield text-indigo-600"></i><div><h3>Sesión actual</h3><p>Cuenta Google validada para esta sesión.</p></div></div>
+          <div class="flex items-center gap-4"><img id="securityAvatar" alt="" class="w-14 h-14 rounded-full bg-slate-100 object-cover"><div class="min-w-0"><strong id="securityName" class="block text-sm truncate">—</strong><span id="securityEmail" class="block text-xs text-slate-500 truncate">—</span><span id="securityRole" class="badge mt-2">—</span></div></div>
+          <div class="grid grid-cols-2 gap-3 mt-5"><div class="mini-stat"><span>Proveedor</span><strong>Google</strong></div><div class="mini-stat"><span>Bloqueo por inactividad</span><strong>30 minutos</strong></div></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-5"><button type="button" onclick="lockApplication()" class="secondary-btn"><i class="fa-solid fa-lock mr-2"></i>Bloquear ahora</button><button type="button" onclick="signOutGoogle()" class="secondary-btn !text-rose-700"><i class="fa-solid fa-right-from-bracket mr-2"></i>Cerrar sesión</button></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><i class="fa-solid fa-shield-halved text-emerald-600"></i><div><h3>Política de acceso</h3><p>Configuración aplicada en esta versión.</p></div></div>
+          <div class="space-y-3 text-xs"><div class="audit-ok"><strong>Cuenta autorizada:</strong> la aplicación valida la identidad Google antes de cargar la base local.</div><div class="audit-ok"><strong>Drive privado:</strong> el permiso <code>drive.appdata</code> continúa limitado al espacio privado de AulaGestión.</div><div class="audit-ok"><strong>Token temporal:</strong> el token Google se conserva solo en la sesión del navegador y expira automáticamente.</div><div class="audit-warn"><strong>GitHub Pages es público:</strong> el código de la aplicación puede ser consultado, pero el inicio de sesión no concede acceso a tus datos locales ni a tu Drive.</div><div class="audit-warn"><strong>Administración de usuarios:</strong> para agregar otros docentes deben añadirse a la política de autorización y, mientras Google OAuth esté en modo Pruebas, también como usuarios de prueba en Google Cloud.</div></div>
+        </div>
+      </div>
+    </main>
+
+<main id="section-nube" class="section p-5 md:p-8 space-y-6 flex-1 overflow-y-auto hidden">
+      <div>
+        <h1 class="text-2xl font-bold">Nube y respaldos</h1>
+        <p class="text-xs text-slate-500">IndexedDB es la fuente principal. Google Drive u OneDrive guardan una copia portátil de tus datos.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="panel lg:col-span-2">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <span class="label">Estado actual</span>
+              <h2 id="cloudPanelStatus" class="text-lg font-extrabold">Guardado local</h2>
+              <p id="cloudPanelDetail" class="text-xs text-slate-500 mt-1">Tus datos están seguros en este dispositivo.</p>
+            </div>
+            <div id="cloudPanelIcon" class="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-xl"><i class="fa-solid fa-hard-drive"></i></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
+            <div class="mini-stat"><span>Último cambio local</span><strong id="lastLocalChange">—</strong></div>
+            <div class="mini-stat"><span>Última sincronización</span><strong id="lastCloudSync">—</strong></div>
+            <div class="mini-stat"><span>Proveedor</span><strong id="activeProviderLabel">Solo local</strong></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2 class="font-bold mb-3">Acciones rápidas</h2>
+          <div class="space-y-2">
+            <button onclick="syncPreferredCloud()" class="primary-btn"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>Sincronizar ahora</button>
+            <button onclick="restorePreferredCloud()" class="secondary-btn"><i class="fa-solid fa-cloud-arrow-down mr-2"></i>Restaurar desde nube</button>
+            <button onclick="backupJSON()" class="secondary-btn"><i class="fa-solid fa-download mr-2"></i>Descargar JSON</button>
+            <button onclick="document.getElementById('restoreFile').click()" class="secondary-btn"><i class="fa-solid fa-upload mr-2"></i>Importar JSON</button>
+            <input id="restoreFile" type="file" accept="application/json,.json" class="hidden" onchange="restoreFromFile(event)">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="panel border-t-4 border-t-emerald-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-brands fa-google-drive"></i></div>
+            <div><h2 class="font-extrabold">Google Drive</h2><p class="text-xs text-slate-500">Usa appDataFolder: AulaGestión no puede leer tu Drive completo.</p></div>
+          </div>
+          <div class="space-y-3">
+            <div><label class="label">Google OAuth Client ID</label><input id="googleClientId" class="field" placeholder="xxxxxxxx.apps.googleusercontent.com"><p class="text-[10px] text-slate-400 mt-1">AulaGestión usa este mismo cliente para el inicio de sesión y el respaldo privado en Drive.</p></div>
+            <div class="rounded-lg bg-slate-50 border p-3 text-xs text-slate-600"><strong>Permiso solicitado:</strong> <code>drive.appdata</code>. La copia queda oculta dentro del espacio privado de la aplicación.</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button onclick="saveCloudSettings(); connectGoogle()" class="provider-btn bg-emerald-600 hover:bg-emerald-700"><i class="fa-brands fa-google mr-2"></i>Conectar Google</button>
+              <button onclick="chooseProvider('google')" class="secondary-btn">Usar como principal</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button onclick="googleSyncRequested()" class="secondary-btn"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>Respaldar en Drive</button>
+              <button onclick="googleRestoreRequested()" class="secondary-btn"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Restaurar de Drive</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel border-t-4 border-t-sky-500">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg"><i class="fa-brands fa-microsoft"></i></div>
+            <div><h2 class="font-extrabold">Microsoft OneDrive</h2><p class="text-xs text-slate-500">Usa Apps/AulaGestión RD con el permiso AppFolder.</p></div>
+          </div>
+          <div class="space-y-3">
+            <div><label class="label">Microsoft Entra Client ID</label><input id="microsoftClientId" class="field" placeholder="ID de aplicación (cliente)"></div>
+            <div><label class="label">URI de redirección que debes registrar como SPA</label><div class="flex gap-2"><input id="microsoftRedirectUri" class="field bg-slate-50" readonly><button onclick="copyRedirectUri()" class="secondary-btn !w-auto px-3" title="Copiar"><i class="fa-solid fa-copy"></i></button></div></div>
+            <div class="rounded-lg bg-slate-50 border p-3 text-xs text-slate-600"><strong>Permiso solicitado:</strong> <code>Files.ReadWrite.AppFolder</code>. Se usa OAuth 2.0 Authorization Code + PKCE, sin contraseña ni client secret.</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button onclick="saveCloudSettings(); microsoftConnectRequested('connect')" class="provider-btn bg-sky-600 hover:bg-sky-700"><i class="fa-brands fa-microsoft mr-2"></i>Conectar Microsoft</button>
+              <button onclick="chooseProvider('microsoft')" class="secondary-btn">Usar como principal</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button onclick="microsoftConnectRequested('sync')" class="secondary-btn"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>Respaldar en OneDrive</button>
+              <button onclick="microsoftConnectRequested('restore')" class="secondary-btn"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Restaurar de OneDrive</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="font-extrabold mb-4">Preferencias</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div><label class="label">Proveedor principal</label><select id="preferredProvider" class="field" onchange="saveCloudSettings()"><option value="local">Solo local</option><option value="google">Google Drive</option><option value="microsoft">Microsoft OneDrive</option></select></div>
+          <label class="flex gap-3 items-center border rounded-xl p-3 cursor-pointer bg-slate-50"><input id="autoSync" type="checkbox" class="w-4 h-4" onchange="saveCloudSettings()"><span><strong class="block text-sm">Auto-respaldo</strong><small class="text-slate-500">Sincroniza durante la sesión cuando hay token válido.</small></span></label>
+          <button onclick="disconnectCloud()" class="secondary-btn"><i class="fa-solid fa-plug-circle-xmark mr-2"></i>Desconectar sesión de nube</button>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-4">Para conectar con la nube la app debe ejecutarse desde <strong>HTTPS</strong> o localhost; no funciona mediante <code>file://</code>. La gestión local sí funciona abriendo el archivo directamente.</p>
+      </div>
+    </main>
+  </div>
+
+  <div id="studentEditModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="studentEditTitle">
+    <div class="modal-card"><div class="flex items-start justify-between gap-3"><div><h2 id="studentEditTitle" class="text-lg font-extrabold">Editar estudiante</h2><p class="text-xs text-slate-500">Corrige el nombre, número de lista o reasigna el grado y sección.</p></div><button type="button" class="secondary-btn !w-auto px-3" onclick="closeStudentEdit()"><i class="fa-solid fa-xmark"></i></button></div>
+      <input id="editStudentId" type="hidden"><div class="space-y-3 mt-4"><div><label class="label">Nombre completo</label><input id="editStudentName" class="field"></div><div><label class="label">Número de lista</label><input id="editStudentNumber" class="field"></div><div><label class="label">Grupo / sección</label><select id="editStudentCourse" class="field"></select></div></div><div class="flex gap-2 mt-5"><button type="button" onclick="saveStudentEdit()" class="primary-btn">Guardar cambios</button><button type="button" onclick="closeStudentEdit()" class="secondary-btn">Cancelar</button></div>
+    </div>
+  </div>
+  <div id="studentReportModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="studentReportTitle">
+    <div class="modal-card !max-w-4xl"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 id="studentReportTitle" class="text-lg font-extrabold">Reporte del estudiante</h2><p id="studentReportSubtitle" class="text-xs text-slate-500"></p></div><div class="flex gap-2"><button type="button" onclick="exportCurrentStudentReport()" class="secondary-btn !w-auto px-3"><i class="fa-solid fa-file-excel mr-2"></i>Excel</button><button type="button" class="secondary-btn !w-auto px-3" onclick="closeStudentReport()"><i class="fa-solid fa-xmark"></i></button></div></div><div id="studentReportContent" class="mt-5 space-y-4"></div></div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <style>
+    .panel{background:white;padding:1.5rem;border-radius:1rem;border:1px solid rgb(226 232 240);box-shadow:0 1px 2px rgb(15 23 42 / .04)}
+    .metric-card{background:white;padding:1.25rem;border-radius:1rem;border:1px solid rgb(226 232 240);box-shadow:0 1px 2px rgb(15 23 42 / .04);display:flex;align-items:center;justify-content:space-between}.metric-number{font-size:1.8rem;font-weight:800;color:rgb(30 41 59)}.metric-label{font-size:.75rem;font-weight:600;color:rgb(100 116 139);margin-top:.15rem}.metric-icon{width:2.8rem;height:2.8rem;border-radius:.8rem;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+    .panel-title{display:flex;gap:.75rem;align-items:center;border-bottom:1px solid rgb(226 232 240);padding-bottom:1rem;margin-bottom:1rem}.panel-title h3{font-size:.875rem;font-weight:800}.panel-title p{font-size:.75rem;color:rgb(148 163 184)}
+    .form-title{font-size:.9rem;font-weight:800;border-bottom:1px solid rgb(226 232 240);padding-bottom:.75rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}.label{display:block;font-size:.68rem;font-weight:800;color:rgb(51 65 85);text-transform:uppercase;margin-bottom:.3rem;letter-spacing:.03em}
+    .field{width:100%;padding:.62rem .7rem;font-size:.82rem;border:1px solid rgb(203 213 225);border-radius:.55rem;background:white;outline:none}.field:focus{border-color:rgb(99 102 241);box-shadow:0 0 0 3px rgb(99 102 241 / .12)}
+    .primary-btn,.secondary-btn,.provider-btn{width:100%;font-weight:800;padding:.68rem 1rem;border-radius:.6rem;font-size:.82rem;transition:.15s}.primary-btn{background:rgb(79 70 229);color:white}.primary-btn:hover{background:rgb(67 56 202)}.provider-btn{color:white}.secondary-btn{background:white;color:rgb(51 65 85);border:1px solid rgb(203 213 225)}.secondary-btn:hover{background:rgb(248 250 252)}
+    .table{width:100%;text-align:left;font-size:.8rem;border-collapse:collapse}.table thead tr{background:rgb(248 250 252);border-bottom:1px solid rgb(226 232 240)}.table th{padding:.75rem;font-size:.65rem;font-weight:800;text-transform:uppercase;color:rgb(71 85 105)}.table td{padding:.75rem;border-bottom:1px solid rgb(241 245 249);vertical-align:top}.badge{display:inline-flex;align-items:center;padding:.18rem .48rem;border-radius:.4rem;font-size:.65rem;font-weight:800;background:rgb(238 242 255);color:rgb(67 56 202)}.danger{color:rgb(225 29 72)}.danger:hover{color:rgb(159 18 57)}
+    .status-pill{display:flex;align-items:center;gap:.4rem;padding:.45rem .65rem;border-radius:999px;font-size:.7rem;font-weight:800;border:1px solid}.status-local{background:rgb(248 250 252);color:rgb(71 85 105);border-color:rgb(226 232 240)}.status-pending{background:rgb(255 251 235);color:rgb(180 83 9);border-color:rgb(253 230 138)}.status-synced{background:rgb(236 253 245);color:rgb(4 120 87);border-color:rgb(167 243 208)}.status-error{background:rgb(255 241 242);color:rgb(190 18 60);border-color:rgb(254 205 211)}
+    .mini-stat{background:rgb(248 250 252);border:1px solid rgb(226 232 240);border-radius:.75rem;padding:.75rem}.mini-stat span{display:block;font-size:.65rem;text-transform:uppercase;font-weight:800;color:rgb(100 116 139)}.mini-stat strong{display:block;font-size:.78rem;margin-top:.25rem;color:rgb(30 41 59)}
+    .toast{position:fixed;right:1rem;bottom:1rem;max-width:min(28rem,calc(100vw - 2rem));z-index:100;padding:.85rem 1rem;border-radius:.75rem;background:rgb(15 23 42);color:white;font-size:.78rem;font-weight:600;box-shadow:0 12px 30px rgb(15 23 42 / .25)}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em}
+
+    .cal-head{background:rgb(248 250 252);padding:.6rem;text-align:center;font-weight:800;color:rgb(71 85 105)}
+    .cal-day{background:white;min-height:8.3rem;padding:.45rem;position:relative;overflow:hidden}.cal-day.weekend{background:rgb(248 250 252)}.cal-day.outside{background:rgb(248 250 252);color:rgb(148 163 184)}.cal-day.no-class{background:rgb(255 241 242)}
+    .cal-number{font-size:.72rem;font-weight:800;color:rgb(51 65 85);margin-bottom:.3rem}.cal-chip{display:block;font-size:.58rem;font-weight:700;padding:.18rem .28rem;border-radius:.28rem;margin:.12rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cal-legend{padding:.25rem .5rem;border-radius:.35rem;font-weight:800}
+    .calendar-official{background:rgb(224 231 255);color:rgb(55 48 163)}.calendar-activity{background:rgb(209 250 229);color:rgb(6 95 70)}.calendar-evaluacion{background:rgb(254 243 199);color:rgb(146 64 14)}.calendar-nolectivo{background:rgb(255 228 230);color:rgb(159 18 57)}.calendar-recuperacion{background:rgb(224 242 254);color:rgb(3 105 161)}.calendar-centro{background:rgb(241 245 249);color:rgb(51 65 85)}
+    .warning-chip{display:inline-flex;align-items:center;gap:.25rem;background:rgb(255 241 242);color:rgb(190 18 60);border:1px solid rgb(254 205 211);padding:.15rem .4rem;border-radius:.35rem;font-size:.62rem;font-weight:800}
+    .ok-chip{display:inline-flex;align-items:center;gap:.25rem;background:rgb(236 253 245);color:rgb(4 120 87);border:1px solid rgb(167 243 208);padding:.15rem .4rem;border-radius:.35rem;font-size:.62rem;font-weight:800}
+    .score-pass{color:rgb(4 120 87);font-weight:800}.score-fail{color:rgb(190 18 60);font-weight:800}
+    .modal-backdrop{position:fixed;inset:0;background:rgb(15 23 42 / .55);z-index:90;display:flex;align-items:center;justify-content:center;padding:1rem;overflow:auto}.modal-backdrop.hidden{display:none}.modal-card{width:min(100%,38rem);max-height:90vh;overflow:auto;background:white;border-radius:1rem;padding:1.25rem;box-shadow:0 20px 60px rgb(15 23 42 / .3)}
+    .audit-ok{border:1px solid rgb(167 243 208);background:rgb(236 253 245);color:rgb(4 120 87);padding:.65rem;border-radius:.55rem}.audit-warn{border:1px solid rgb(253 230 138);background:rgb(255 251 235);color:rgb(146 64 14);padding:.65rem;border-radius:.55rem}.audit-error{border:1px solid rgb(254 205 211);background:rgb(255 241 242);color:rgb(159 18 57);padding:.65rem;border-radius:.55rem}
+    .auth-gate{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:1.25rem;background:linear-gradient(145deg,rgb(238 242 255),rgb(248 250 252) 48%,rgb(240 253 250));overflow:auto}.auth-gate.hidden{display:none}.auth-card{width:min(100%,31rem);background:white;border:1px solid rgb(226 232 240);border-radius:1.35rem;padding:2rem;box-shadow:0 24px 70px rgb(15 23 42 / .16);text-align:center}.auth-logo{width:4rem;height:4rem;margin:0 auto 1rem;border-radius:1.15rem;background:rgb(79 70 229);color:white;display:flex;align-items:center;justify-content:center;font-size:1.55rem;box-shadow:0 10px 24px rgb(79 70 229 / .25)}.auth-kicker{font-size:.65rem;font-weight:900;letter-spacing:.14em;color:rgb(79 70 229)}.auth-card h1{font-size:1.6rem;font-weight:900;margin:.35rem 0;color:rgb(30 41 59)}.auth-copy{font-size:.78rem;line-height:1.6;color:rgb(100 116 139);margin:.4rem auto 1rem;max-width:27rem}.auth-status{display:flex;align-items:flex-start;gap:.55rem;text-align:left;padding:.75rem .85rem;border-radius:.75rem;background:rgb(248 250 252);border:1px solid rgb(226 232 240);font-size:.72rem;color:rgb(71 85 105);margin-bottom:.8rem}.auth-status.error{background:rgb(255 241 242);border-color:rgb(254 205 211);color:rgb(159 18 57)}.auth-status.success{background:rgb(236 253 245);border-color:rgb(167 243 208);color:rgb(4 120 87)}.auth-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.6rem;padding:.78rem 1rem;border-radius:.75rem;background:rgb(15 23 42);color:white;font-size:.82rem;font-weight:800;transition:.15s}.auth-google-btn:hover:not(:disabled){background:rgb(30 41 59);transform:translateY(-1px)}.auth-google-btn:disabled{opacity:.45;cursor:not-allowed}.auth-security-note{display:flex;gap:.5rem;text-align:left;margin-top:1rem;padding:.75rem;border-radius:.75rem;background:rgb(238 242 255);color:rgb(55 48 163);font-size:.68rem;line-height:1.45}.auth-small{font-size:.62rem;color:rgb(148 163 184);line-height:1.45;margin-top:.8rem}
+  </style>
+
+  <script>
+    'use strict';
+
+    const APP_VERSION = 6;
+    const GOOGLE_CLIENT_ID = '1027532565910-2ego4k76sms9fcp9p1hkopgnkdcvbjig.apps.googleusercontent.com';
+    const GOOGLE_SCOPES = 'openid email profile https://www.googleapis.com/auth/drive.appdata';
+    const AUTH_IDLE_MS = 30*60*1000;
+    const AUTHORIZED_USERS = new Map([['227c75a438d6a5658422c0fbf2c104b09e35d499718f87d3633a19aa6e40fce2',{role:'Administrador'}]]);
+    const DB_NAME = 'AulaGestionRD';
+    const DB_VERSION = 5;
+    const CLOUD_FILE = 'AulaGestionRD.backup.json';
+    const STORES = ['cursos','materias','alumnos','evaluaciones','ras','raNotas','competenciaNotas','actividades','asistencias','bitacora','conducta','instrumentos','calendario'];
+    const COMPETENCIAS = [
+      'Comunicativa',
+      'Pensamiento Lógico, Creativo y Crítico',
+      'Resolución de Problemas',
+      'Ética y Ciudadana',
+      'Desarrollo Personal y Espiritual',
+      'Científica y Tecnológica',
+      'Ambiental y de Salud'
+    ];
+    const COMP_GROUPS = [
+      {name:'C1 · Comunicativa',items:['Comunicativa']},
+      {name:'C2 · Pensamiento / Resolución',items:['Pensamiento Lógico, Creativo y Crítico','Resolución de Problemas']},
+      {name:'C3 · Ética / Desarrollo personal',items:['Ética y Ciudadana','Desarrollo Personal y Espiritual']},
+      {name:'C4 · Científica / Ambiental',items:['Científica y Tecnológica','Ambiental y de Salud']}
+    ];
+    const LEGACY_ACTIVITIES = [{"id":"seed-MF_600_3-ACT-01","moduleCode":"MF_600_3","materiaId":null,"date":"2026-08-24","code":"ACT-01","title":"Presentación del módulo y diagnóstico de intereses vocacionales","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-02","moduleCode":"MF_600_3","materiaId":null,"date":"2026-08-28","code":"ACT-02","title":"Observación y análisis de campañas gráficas, audiovisuales y digitales dominicanas","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-03","moduleCode":"MF_600_3","materiaId":null,"date":"2026-09-04","code":"ACT-03","title":"Clasificación de productos según las áreas del diseño gráfico y multimedia","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-04","moduleCode":"MF_600_3","materiaId":null,"date":"2026-09-18","code":"ACT-04","title":"Debate guiado: ¿Qué hace un diseñador gráfico, ilustrador, editor de video, diseñador UX/UI y creador de contenido?","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-05","moduleCode":"MF_600_3","materiaId":null,"date":"2026-09-18","code":"ACT-05","title":"Investigación sobre profesionales del diseño en República Dominicana","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-06","moduleCode":"MF_600_3","materiaId":null,"date":"2026-09-21","code":"ACT-06","title":"Elaboración de un mapa de profesiones del área creativa","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-07","moduleCode":"MF_600_3","materiaId":null,"date":"2026-09-25","code":"ACT-07","title":"Conversatorio o entrevista con un profesional invitado","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-08","moduleCode":"MF_600_3","materiaId":null,"date":"2026-10-02","code":"ACT-08","title":"Elaboración de una infografía sobre una profesión seleccionada","points":4.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-09","moduleCode":"MF_600_3","materiaId":null,"date":"2026-10-16","code":"ACT-09","title":"Diseño de un logotipo personal utilizando bocetos y Canva","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-10","moduleCode":"MF_600_3","materiaId":null,"date":"2026-10-19","code":"ACT-10","title":"Creación de una composición fotográfica utilizando un teléfono móvil","points":4.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-11","moduleCode":"MF_600_3","materiaId":null,"date":"2026-10-23","code":"ACT-11","title":"Elaboración de un video corto utilizando CapCut","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-12","moduleCode":"MF_600_3","materiaId":null,"date":"2026-11-06","code":"ACT-12","title":"Diseño de una pantalla sencilla en Figma","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-13","moduleCode":"MF_600_3","materiaId":null,"date":"2026-11-13","code":"ACT-13","title":"Búsqueda de imágenes, tipografías e íconos en bancos de recursos libres","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-14","moduleCode":"MF_600_3","materiaId":null,"date":"2026-11-20","code":"ACT-14","title":"Generación de ideas utilizando herramientas de Inteligencia Artificial","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-15","moduleCode":"MF_600_3","materiaId":null,"date":"2026-11-23","code":"ACT-15","title":"Elaboración de un registro de fuentes utilizadas","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-16","moduleCode":"MF_600_3","materiaId":null,"date":"2026-11-27","code":"ACT-16","title":"Debate: Ética, derechos de autor e Inteligencia Artificial en el diseño","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-17","moduleCode":"MF_600_3","materiaId":null,"date":"2026-12-04","code":"ACT-17","title":"Organización de evidencias de aprendizaje","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-18","moduleCode":"MF_600_3","materiaId":null,"date":"2026-12-11","code":"ACT-18","title":"Elaboración de un portafolio digital en Canva o Google Sites","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-19","moduleCode":"MF_600_3","materiaId":null,"date":"2027-01-12","code":"ACT-19","title":"Presentación del portafolio y reflexión personal sobre interés vocacional","points":4.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-20","moduleCode":"MF_600_3","materiaId":null,"date":"2027-01-15","code":"ACT-20","title":"Identificación de una problemática del entorno mediante observación","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-21","moduleCode":"MF_600_3","materiaId":null,"date":"2027-01-29","code":"ACT-21","title":"Elaboración del briefing del proyecto","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-22","moduleCode":"MF_600_3","materiaId":null,"date":"2027-02-02","code":"ACT-22","title":"Desarrollo de bocetos y lluvia de ideas","points":4.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-23","moduleCode":"MF_600_3","materiaId":null,"date":"2027-02-09","code":"ACT-23","title":"Presentación de la propuesta inicial","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-24","moduleCode":"MF_600_3","materiaId":null,"date":"2027-02-16","code":"ACT-24","title":"Diseño de un afiche o publicación para redes sociales","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-25","moduleCode":"MF_600_3","materiaId":null,"date":"2027-02-26","code":"ACT-25","title":"Producción de un video promocional corto","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-26","moduleCode":"MF_600_3","materiaId":null,"date":"2027-03-01","code":"ACT-26","title":"Diseño de una pantalla sencilla o prototipo interactivo","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-27","moduleCode":"MF_600_3","materiaId":null,"date":"2027-03-12","code":"ACT-27","title":"Revisión y mejora del producto elaborado","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-28","moduleCode":"MF_600_3","materiaId":null,"date":"2027-03-19","code":"ACT-28","title":"Organización de equipos y asignación de roles","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-29","moduleCode":"MF_600_3","materiaId":null,"date":"2027-04-02","code":"ACT-29","title":"Desarrollo colaborativo del proyecto","points":4.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-30","moduleCode":"MF_600_3","materiaId":null,"date":"2027-04-05","code":"ACT-30","title":"Seguimiento del trabajo mediante bitácora","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-31","moduleCode":"MF_600_3","materiaId":null,"date":"2027-04-09","code":"ACT-31","title":"Retroalimentación entre equipos","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-32","moduleCode":"MF_600_3","materiaId":null,"date":"2027-04-16","code":"ACT-32","title":"Selección de evidencias del año escolar","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-33","moduleCode":"MF_600_3","materiaId":null,"date":"2027-04-30","code":"ACT-33","title":"Organización del portafolio digital","points":4.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-34","moduleCode":"MF_600_3","materiaId":null,"date":"2027-05-03","code":"ACT-34","title":"Diseño de la presentación final del portafolio","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-35","moduleCode":"MF_600_3","materiaId":null,"date":"2027-05-07","code":"ACT-35","title":"Exposición del portafolio ante docentes y compañeros","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-36","moduleCode":"MF_600_3","materiaId":null,"date":"2027-05-14","code":"ACT-36","title":"Autoevaluación del proceso de aprendizaje","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-37","moduleCode":"MF_600_3","materiaId":null,"date":"2027-05-21","code":"ACT-37","title":"Aplicación de la evaluación vocacional final","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_600_3-ACT-38","moduleCode":"MF_600_3","materiaId":null,"date":"2027-05-24","code":"ACT-38","title":"Entrevista individual con el docente y entrega de recomendaciones","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Pratica 3ros","seeded":true},{"id":"seed-MF_629_3-ACT-01","moduleCode":"MF_629_3","materiaId":null,"date":"2026-08-24","code":"ACT-01","title":"Fundamentos de la imagen digital","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-02","moduleCode":"MF_629_3","materiaId":null,"date":"2026-09-04","code":"ACT-02","title":"Análisis comparativo de imágenes digitales","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-03","moduleCode":"MF_629_3","materiaId":null,"date":"2026-09-07","code":"ACT-03","title":"Flujo de trabajo profesional en software de edición digital","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-04","moduleCode":"MF_629_3","materiaId":null,"date":"2026-09-18","code":"ACT-04","title":"Esquema del proceso de preparación de imágenes","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-05","moduleCode":"MF_629_3","materiaId":null,"date":"2026-09-21","code":"ACT-05","title":"Clasificación de originales digitales y fotográficos","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-06","moduleCode":"MF_629_3","materiaId":null,"date":"2026-09-25","code":"ACT-06","title":"Selección inicial de recursos visuales del proyecto ABP","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-07","moduleCode":"MF_629_3","materiaId":null,"date":"2026-09-28","code":"ACT-07","title":"Resolución, dimensiones y proporción según medio de publicación","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-08","moduleCode":"MF_629_3","materiaId":null,"date":"2026-10-02","code":"ACT-08","title":"Comparación de imágenes","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-09","moduleCode":"MF_629_3","materiaId":null,"date":"2026-10-05","code":"ACT-09","title":"Formatos digitales de imagen","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-10","moduleCode":"MF_629_3","materiaId":null,"date":"2026-10-07","code":"ACT-10","title":"Guía comparativa de formatos digitales","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-11","moduleCode":"MF_629_3","materiaId":null,"date":"2026-10-09","code":"ACT-11","title":"Selección del formato según medio de salida","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-12","moduleCode":"MF_629_3","materiaId":null,"date":"2026-10-12","code":"ACT-12","title":"Importación de imágenes digitales desde distintas fuentes","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-13","moduleCode":"MF_629_3","materiaId":null,"date":"2026-10-23","code":"ACT-13","title":"Banco inicial de imágenes del proyecto ABP","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-14","moduleCode":"MF_629_3","materiaId":null,"date":"2026-10-26","code":"ACT-14","title":"Análisis de composición en fotografías profesionales","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-15","moduleCode":"MF_629_3","materiaId":null,"date":"2026-10-30","code":"ACT-15","title":"Curaduría final de imágenes del proyecto ABP","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-16","moduleCode":"MF_629_3","materiaId":null,"date":"2026-11-06","code":"ACT-16","title":"Dossier técnico inicial del proyecto ABP","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-17","moduleCode":"MF_629_3","materiaId":null,"date":"2026-11-09","code":"ACT-17","title":"Equipos de captura digital","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-18","moduleCode":"MF_629_3","materiaId":null,"date":"2026-11-12","code":"ACT-18","title":"Partes principales de una cámara digital","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-19","moduleCode":"MF_629_3","materiaId":null,"date":"2026-11-17","code":"ACT-19","title":"Práctica de captura fotográfica","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-20","moduleCode":"MF_629_3","materiaId":null,"date":"2026-11-20","code":"ACT-20","title":"Evaluación comparativa de fotografías obtenidas","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-21","moduleCode":"MF_629_3","materiaId":null,"date":"2026-11-23","code":"ACT-21","title":"Práctica de digitalización mediante escáner","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-22","moduleCode":"MF_629_3","materiaId":null,"date":"2026-11-30","code":"ACT-22","title":"Gestión del color","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-23","moduleCode":"MF_629_3","materiaId":null,"date":"2026-12-04","code":"ACT-23","title":"Organización profesional de archivos digitales","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-24","moduleCode":"MF_629_3","materiaId":null,"date":"2026-12-11","code":"ACT-24","title":"Consolidación del banco de recursos visuales del proyecto ABP","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-25","moduleCode":"MF_629_3","materiaId":null,"date":"2026-12-14","code":"ACT-25","title":"Derechos de autor y licencias de uso","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-26","moduleCode":"MF_629_3","materiaId":null,"date":"2026-12-18","code":"ACT-26","title":"Portafolio técnico de captura y digitalización","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-27","moduleCode":"MF_629_3","materiaId":null,"date":"2027-01-05","code":"ACT-27","title":"Exploración de la interfaz de Adobe Photoshop","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-28","moduleCode":"MF_629_3","materiaId":null,"date":"2027-01-15","code":"ACT-28","title":"Organización de documentos","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-29","moduleCode":"MF_629_3","materiaId":null,"date":"2027-01-18","code":"ACT-29","title":"Corrección de exposición, brillo, contraste y balance de blancos","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-30","moduleCode":"MF_629_3","materiaId":null,"date":"2027-01-29","code":"ACT-30","title":"Curvas, Niveles y capas de ajuste","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-31","moduleCode":"MF_629_3","materiaId":null,"date":"2027-02-01","code":"ACT-31","title":"Revelado digital de archivos RAW con Camera Raw","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-32","moduleCode":"MF_629_3","materiaId":null,"date":"2027-02-12","code":"ACT-32","title":"Optimización y exportación de imágenes","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-33","moduleCode":"MF_629_3","materiaId":null,"date":"2027-02-15","code":"ACT-33","title":"Selección, máscaras y clonación para restaurar imágenes","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-34","moduleCode":"MF_629_3","materiaId":null,"date":"2027-02-19","code":"ACT-34","title":"Ejercicios de retoque fotográfico profesional","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-35","moduleCode":"MF_629_3","materiaId":null,"date":"2027-02-22","code":"ACT-35","title":"Desarrollo del proyecto ABP","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-36","moduleCode":"MF_629_3","materiaId":null,"date":"2027-03-05","code":"ACT-36","title":"Presentación del proyecto final de tratamiento de imágenes","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-37","moduleCode":"MF_629_3","materiaId":null,"date":"2027-03-12","code":"ACT-37","title":"Registro técnico del proyecto de tratamiento de imágenes","points":4.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-38","moduleCode":"MF_629_3","materiaId":null,"date":"2027-03-15","code":"ACT-38","title":"Principios de composición visual","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-39","moduleCode":"MF_629_3","materiaId":null,"date":"2027-03-22","code":"ACT-39","title":"Análisis de composiciones fotográficas y publicitarias","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-40","moduleCode":"MF_629_3","materiaId":null,"date":"2027-03-29","code":"ACT-40","title":"Planificación del fotomontaje del proyecto ABP","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-41","moduleCode":"MF_629_3","materiaId":null,"date":"2027-03-30","code":"ACT-41","title":"Ajuste de perspectiva, escala y proporción entre imágenes","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-42","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-05","code":"ACT-42","title":"Igualación de iluminación y color entre elementos del montaje","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-43","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-09","code":"ACT-43","title":"Comparación entre montaje inicial y montaje corregido","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-44","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-12","code":"ACT-44","title":"Selección avanzada y máscaras de recorte","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-45","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-14","code":"ACT-45","title":"Modos de fusión y objetos inteligentes para integración realista","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-46","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-16","code":"ACT-46","title":"Desarrollo del fotomontaje del proyecto ABP","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-47","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-19","code":"ACT-47","title":"Iluminación, sombras y efectos atmosféricos en el montaje","points":1.5,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-48","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-23","code":"ACT-48","title":"Fotomontaje final del proyecto ABP","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-49","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-23","code":"ACT-49","title":"Defensa del proceso creativo del fotomontaje","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-50","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-26","code":"ACT-50","title":"Exploración de la interfaz de Adobe Illustrator","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-51","moduleCode":"MF_629_3","materiaId":null,"date":"2027-04-30","code":"ACT-51","title":"Organización de documentos en Illustrator","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-52","moduleCode":"MF_629_3","materiaId":null,"date":"2027-05-03","code":"ACT-52","title":"Ilustraciones vectoriales","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-53","moduleCode":"MF_629_3","materiaId":null,"date":"2027-05-10","code":"ACT-53","title":"Color, degradados y tipografía en gráficos vectoriales","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-54","moduleCode":"MF_629_3","materiaId":null,"date":"2027-05-14","code":"ACT-54","title":"Diseño de íconos, pictogramas y logotipos sencillos","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-55","moduleCode":"MF_629_3","materiaId":null,"date":"2027-05-17","code":"ACT-55","title":"Integración de gráficos vectoriales con imágenes tratadas","points":2.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-56","moduleCode":"MF_629_3","materiaId":null,"date":"2027-05-19","code":"ACT-56","title":"Preparación y exportación de archivos vectoriales","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-57","moduleCode":"MF_629_3","materiaId":null,"date":"2027-05-21","code":"ACT-57","title":"Revisión técnica del proyecto gráfico","points":1.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-58","moduleCode":"MF_629_3","materiaId":null,"date":"2027-05-24","code":"ACT-58","title":"Proyecto final","points":5.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true},{"id":"seed-MF_629_3-ACT-59","moduleCode":"MF_629_3","materiaId":null,"date":"2027-05-28","code":"ACT-59","title":"Portafolio digital final del módulo","points":3.0,"type":"Actividad","raCode":"","source":"Cursos-didactica26-27.xlsx / Practica 5TO","seeded":true}];
+    const SEED_5TO_STUDENTS = ["Acosta Gonzales, Jefferson Alberto","Álvarez Guzmán, Reik David","Báez Ulloa, Luis Yadiel","Báez Ulloa, Luis Yandel","Castillo Rodríguez, Marbelyn Nayhely","Cruceta Jiménez, Claudia Mabel","Cruz Espejo, Brenda","De los Santos Pérez, Franklyn José","Díaz García, Anais","Diloné Morel, Kendry Enmanuel","Espaillat Castillo, Kary","Fabián, Dafne de Jesús","Gil, Yeralin","Gutiérrez Rojas, Emely Marie","Helena Sandoval, Ángel Enmanuel","Jiménez Veras, Oscar Gabriel","López, Yeudy Enmanuel","Lora Arias, Ángel Yeremy","Marte, Juliana María","Morel Muñoz, José Gabriel","Pérez Martínez, Ashelyn Manuela","Pichardo Torres, Jashley Dahiana","Reyes Rodríguez, Nayelys Alejandra","Rojas Núñez, Anabel","Sánchez Cruz, Frailin","Sánchez Cruz, Heidy"];
+
+    const RA_DEFAULTS = [
+      {id:'MF_600_3-RA1',moduleCode:'MF_600_3',code:'RA1',description:'Resultado de aprendizaje 1',weight:40,min:28,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_600_3-RA2',moduleCode:'MF_600_3',code:'RA2',description:'Resultado de aprendizaje 2',weight:60,min:42,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_629_3-RA1',moduleCode:'MF_629_3',code:'RA1',description:'Resultado de aprendizaje 1',weight:20,min:14,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_629_3-RA2',moduleCode:'MF_629_3',code:'RA2',description:'Resultado de aprendizaje 2',weight:10,min:7,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_629_3-RA3',moduleCode:'MF_629_3',code:'RA3',description:'Resultado de aprendizaje 3',weight:30,min:21,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_629_3-RA4',moduleCode:'MF_629_3',code:'RA4',description:'Resultado de aprendizaje 4',weight:20,min:14,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_629_3-RA5',moduleCode:'MF_629_3',code:'RA5',description:'Resultado de aprendizaje 5',weight:20,min:14,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_632_3-RA1',moduleCode:'MF_632_3',code:'RA1',description:'Resultado de aprendizaje 1',weight:40,min:28,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_632_3-RA2',moduleCode:'MF_632_3',code:'RA2',description:'Resultado de aprendizaje 2',weight:35,min:24.5,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'},
+      {id:'MF_632_3-RA3',moduleCode:'MF_632_3',code:'RA3',description:'Resultado de aprendizaje 3',weight:25,min:17.5,source:'FORMULARIO DE REPORTE DE RA(1).xlsx'}
+    ];
+    const INSTRUMENT_DEFAULTS = [
+      {id:'ins-cuaderno',name:'Rúbrica para evaluar el cuaderno',type:'Rúbrica',total:10,criteria:[{name:'Organización',max:3,guide:'Índice completo, fechas y títulos claros.'},{name:'Claridad',max:3,guide:'Ordenado, limpio y estético.'},{name:'Completitud',max:4,guide:'Actividades realizadas correctamente.'}],source:'Cursos-didactica26-27.xlsx / Cuadernos'},
+      {id:'ins-participacion',name:'Lista de cotejo de participación',type:'Lista de cotejo',total:5,criteria:[{name:'Participa activamente en clase',max:1},{name:'Trabaja en equipo de manera efectiva',max:1},{name:'Muestra interés en las actividades',max:1},{name:'Cumple con tareas asignadas a tiempo',max:1},{name:'Demuestra esfuerzo en las tareas',max:1}],source:'Cursos-didactica26-27.xlsx / Participacion'}
+    ];
+
+    const OFFICIAL_CALENDAR = [
+      {id:'minerd-2026-08-03',start:'2026-08-03',end:'2026-08-03',title:'Inicio de labores docentes',category:'oficial',official:true,noClass:false},
+      {id:'minerd-2026-08-24',start:'2026-08-24',end:'2026-08-24',title:'Inicio de docencia para estudiantes',category:'oficial',official:true,noClass:false},
+      {id:'minerd-diag-sep',start:'2026-09-01',end:'2026-09-04',title:'Evaluación diagnóstica de inicio · Nivel Secundario',category:'evaluacion',official:true,noClass:false},
+      {id:'minerd-diag-artes',start:'2026-09-14',end:'2026-09-17',title:'Evaluación diagnóstica · componente especializado de Modalidad en Artes',category:'evaluacion',official:true,noClass:false},
+      {id:'minerd-mercedes',start:'2026-09-24',end:'2026-09-24',title:'Nuestra Señora de las Mercedes · no lectivo',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-p1',start:'2026-10-30',end:'2026-10-30',title:'Reporte de evaluación P1 · Nivel Secundario',category:'evaluacion',official:true,noClass:false},
+      {id:'minerd-rp1',start:'2026-11-02',end:'2027-01-29',title:'Recuperación pedagógica correspondiente a P1',category:'recuperacion',official:true,noClass:false},
+      {id:'minerd-constitucion',start:'2026-11-09',end:'2026-11-09',title:'Día de la Constitución · feriado movido',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-navidad',start:'2026-12-18',end:'2027-01-06',title:'Vacaciones navideñas',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-reinicio-ene',start:'2027-01-07',end:'2027-01-07',title:'Reinicio de clases después de vacaciones navideñas',category:'oficial',official:true,noClass:false},
+      {id:'minerd-altagracia',start:'2027-01-21',end:'2027-01-21',title:'Nuestra Señora de la Altagracia · no lectivo',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-duarte',start:'2027-01-25',end:'2027-01-25',title:'Natalicio de Juan Pablo Duarte · feriado movido',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-p2',start:'2027-01-29',end:'2027-01-29',title:'Reporte de evaluación P2 · Nivel Secundario',category:'evaluacion',official:true,noClass:false},
+      {id:'minerd-rp2',start:'2027-02-01',end:'2027-03-30',title:'Recuperación pedagógica correspondiente a P2',category:'recuperacion',official:true,noClass:false},
+      {id:'minerd-independencia',start:'2027-02-27',end:'2027-02-27',title:'Independencia Nacional',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-semana-santa',start:'2027-03-22',end:'2027-03-28',title:'Semana Santa',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-reinicio-ss',start:'2027-03-29',end:'2027-03-29',title:'Reinicio de docencia después de Semana Santa',category:'oficial',official:true,noClass:false},
+      {id:'minerd-p3',start:'2027-03-31',end:'2027-03-31',title:'Reporte de evaluación P3 · Nivel Secundario',category:'evaluacion',official:true,noClass:false},
+      {id:'minerd-rp3',start:'2027-04-01',end:'2027-05-30',title:'Recuperación pedagógica correspondiente a P3',category:'recuperacion',official:true,noClass:false},
+      {id:'minerd-trabajo',start:'2027-05-03',end:'2027-05-03',title:'Día Internacional del Trabajo · feriado movido',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-p4',start:'2027-06-01',end:'2027-06-01',title:'Reporte de evaluación P4 · Nivel Secundario',category:'evaluacion',official:true,noClass:false},
+      {id:'minerd-rp4',start:'2027-06-02',end:'2027-06-07',title:'Recuperación pedagógica correspondiente a P4',category:'recuperacion',official:true,noClass:false},
+      {id:'minerd-corpus',start:'2027-05-27',end:'2027-05-27',title:'Corpus Christi · no lectivo',category:'nolectivo',official:true,noClass:true},
+      {id:'minerd-rp-etp',start:'2027-06-05',end:'2027-06-16',title:'Recuperación pedagógica de módulos formativos ETP',category:'recuperacion',official:true,noClass:false},
+      {id:'minerd-fin-est',start:'2027-06-18',end:'2027-06-18',title:'Conclusión de docencia para estudiantes',category:'oficial',official:true,noClass:false},
+      {id:'minerd-banco',start:'2027-06-19',end:'2027-06-26',title:'Banco preventivo para recuperación de docencia, si aplica',category:'recuperacion',official:true,noClass:false,conditional:true},
+      {id:'minerd-fin-doc',start:'2027-06-29',end:'2027-06-29',title:'Conclusión del año laboral docente',category:'oficial',official:true,noClass:false}
+    ];
+
+    let db;
+    let cursos=[], materias=[], alumnos=[], evaluaciones=[], ras=[], raNotas=[], competenciaNotas=[], actividades=[], asistencias=[], bitacora=[], conducta=[], instrumentos=[], calendario=[];
+    let chartMatricula=null, chartMaterias=null;
+    let cloudSettings={googleClientId:'',microsoftClientId:'',preferredProvider:'local',autoSync:false};
+    let cloudState={dirty:false,lastLocalChange:null,lastCloudSync:null,lastProvider:null};
+    let googleTokenClient=null, googleAccessToken=sessionStorage.getItem('aulagestion_google_access_token')||null, googleTokenExpiresAt=Number(sessionStorage.getItem('aulagestion_google_expires_at')||0);
+    let authUser=null, authIdleTimer=null, appInitialized=false, authAttemptInFlight=false;
+    let msAccessToken=sessionStorage.getItem('aulagestion_ms_access_token')||null;
+    let msRefreshToken=sessionStorage.getItem('aulagestion_ms_refresh_token')||null;
+    let msTokenExpiresAt=Number(sessionStorage.getItem('aulagestion_ms_expires_at')||0);
+    let autoSyncTimer=null;
+
+    const $=id=>document.getElementById(id);
+    const esc=s=>String(s??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+    const nowIso=()=>new Date().toISOString();
+    const todayIso=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+    const fmtDate=iso=>iso?new Date(iso+(iso.length===10?'T12:00:00':'')).toLocaleString('es-DO',iso.length===10?{dateStyle:'medium'}:{dateStyle:'short',timeStyle:'short'}):'—';
+    const cursoById=id=>cursos.find(c=>String(c.id)===String(id));
+    const materiaById=id=>materias.find(m=>String(m.id)===String(id));
+    const alumnoById=id=>alumnos.find(a=>String(a.id)===String(id));
+    const cursoLabel=c=>`${c.grado} · ${c.especialidad} · Sec. ${c.seccion}`;
+    const materiaLabel=m=>`${m.codigo?m.codigo+' · ':''}${m.nombre}`;
+    const moduleCodeForMateria=m=>m?.codigo||'';
+    const dateInSpan=(date,start,end)=>date>=start&&date<=(end||start);
+    const uniqueId=prefix=>`${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+
+    function toast(message,kind='info'){
+      const el=$('toast');el.textContent=message;el.classList.remove('hidden');
+      el.style.background=kind==='error'?'rgb(159 18 57)':kind==='success'?'rgb(4 120 87)':'rgb(15 23 42)';
+      clearTimeout(el._timer);el._timer=setTimeout(()=>el.classList.add('hidden'),4200);
+    }
+
+    function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const d=req.result;STORES.forEach(name=>{if(!d.objectStoreNames.contains(name))d.createObjectStore(name,{keyPath:'id'})});if(!d.objectStoreNames.contains('meta'))d.createObjectStore('meta',{keyPath:'key'})};req.onsuccess=()=>{db=req.result;resolve(db)};req.onerror=()=>reject(req.error)})}
+    function dbGetAll(store){return new Promise((resolve,reject)=>{const r=db.transaction(store,'readonly').objectStore(store).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)})}
+    function dbGetMeta(key){return new Promise((resolve,reject)=>{const r=db.transaction('meta','readonly').objectStore('meta').get(key);r.onsuccess=()=>resolve(r.result?.value);r.onerror=()=>reject(r.error)})}
+    function dbSetMeta(key,value){return new Promise((resolve,reject)=>{const r=db.transaction('meta','readwrite').objectStore('meta').put({key,value});r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error)})}
+    function dbPut(store,value){return new Promise((resolve,reject)=>{const r=db.transaction(store,'readwrite').objectStore(store).put(value);r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error)})}
+    function dbDelete(store,id){return new Promise((resolve,reject)=>{const r=db.transaction(store,'readwrite').objectStore(store).delete(id);r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error)})}
+    function dbReplaceStore(store,items){return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readwrite'),os=tx.objectStore(store);os.clear();(items||[]).forEach(v=>os.put(v));tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)})}
+    function oldLoadJSON(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null}catch{return null}}
+
+    async function migrateOrSeed(){
+      const migratedV3=await dbGetMeta('migratedV3');
+      if(!migratedV3){
+        const oldCursos=oldLoadJSON('aulagestion_rd_cursos')||oldLoadJSON('mis_cursos_escuela360');
+        const oldMaterias=oldLoadJSON('aulagestion_rd_materias');
+        const oldAlumnos=oldLoadJSON('aulagestion_rd_alumnos')||oldLoadJSON('mis_alumnos_escuela360');
+        const oldEval=oldLoadJSON('aulagestion_rd_evaluaciones');
+        const seedCursos=oldCursos||[
+          {id:1001,modalidad:'Técnico Profesional',grado:'3ro Secundaria',especialidad:'Bachillerato Técnico en Multimedia y Gráfica',seccion:'A'},
+          {id:1002,modalidad:'Técnico Profesional',grado:'5to Secundaria',especialidad:'Bachillerato Técnico en Multimedia y Gráfica',seccion:'E'},
+          {id:1003,modalidad:'Técnico Profesional',grado:'6to Secundaria',especialidad:'Bachillerato Técnico en Multimedia y Gráfica',seccion:'E'},
+          {id:1004,modalidad:'Modalidad en Artes',grado:'4to Secundaria',especialidad:'Bachillerato en Artes · Cine y Fotografía',seccion:'H'}
+        ];
+        const seedMaterias=oldMaterias||[
+          {id:2001,cursoId:1001,tipo:'Módulo Formativo',codigo:'MF_600_3',nombre:'Orientación gráfica y multimedia',horas:1,ponderacion:100},
+          {id:2002,cursoId:1002,tipo:'Módulo Formativo',codigo:'MF_629_3',nombre:'Retoque y tratamiento de imágenes',horas:10,ponderacion:100},
+          {id:2003,cursoId:1003,tipo:'Módulo Formativo',codigo:'MF_632_3',nombre:'Productos interactivos, multimedia y webs',horas:6,ponderacion:100},
+          {id:2004,cursoId:1004,tipo:'Asignatura',codigo:'',nombre:'Identidad, Cultura y Emprendimiento',horas:'',ponderacion:100}
+        ];
+        const seedAlumnos=oldAlumnos?oldAlumnos.map(a=>({...a,numero:a.numero||''})):SEED_5TO_STUDENTS.map((nombre,i)=>({id:3000+i,nombre,numero:String(i+1),cursoId:1002}));
+        await Promise.all([dbReplaceStore('cursos',seedCursos),dbReplaceStore('materias',seedMaterias),dbReplaceStore('alumnos',seedAlumnos),dbReplaceStore('evaluaciones',oldEval||[])]);
+        await dbSetMeta('schoolYear',localStorage.getItem('aulagestion_rd_year')||'2026-2027');
+        await dbSetMeta('migratedV3',true);
+        await dbSetMeta('cloudState',{dirty:false,lastLocalChange:null,lastCloudSync:null,lastProvider:null});
+      }
+      const migratedV4=await dbGetMeta('migratedV4');
+      if(!migratedV4){
+        const raSeed=RA_DEFAULTS;
+        const instrumentSeed=INSTRUMENT_DEFAULTS;
+        const currentRAs=await dbGetAll('ras'),currentActs=await dbGetAll('actividades'),currentIns=await dbGetAll('instrumentos'),currentCal=await dbGetAll('calendario');
+        if(!currentRAs.length)await dbReplaceStore('ras',raSeed);
+        if(!currentActs.length)await dbReplaceStore('actividades',LEGACY_ACTIVITIES);
+        if(!currentIns.length)await dbReplaceStore('instrumentos',instrumentSeed);
+        if(!currentCal.length)await dbReplaceStore('calendario',OFFICIAL_CALENDAR);
+        await dbSetMeta('migratedV4',true);
+      }
+    }
+
+    async function loadState(){
+      const vals=await Promise.all(STORES.map(dbGetAll));
+      [cursos,materias,alumnos,evaluaciones,ras,raNotas,competenciaNotas,actividades,asistencias,bitacora,conducta,instrumentos,calendario]=vals;
+      $('schoolYear').value=await dbGetMeta('schoolYear')||'2026-2027';
+      cloudSettings={...cloudSettings,...(await dbGetMeta('cloudSettings')||{})};
+      if(!cloudSettings.googleClientId)cloudSettings.googleClientId=GOOGLE_CLIENT_ID;
+      cloudState={...cloudState,...(await dbGetMeta('cloudState')||{})};
+      $('googleClientId').value=cloudSettings.googleClientId||GOOGLE_CLIENT_ID;
+      $('microsoftClientId').value=cloudSettings.microsoftClientId||'';
+      $('preferredProvider').value=cloudSettings.preferredProvider||'local';
+      $('autoSync').checked=!!cloudSettings.autoSync;
+      $('microsoftRedirectUri').value=getRedirectUri();
+      const t=todayIso();
+      ['attDate','actDate','calDate','logDate','conductDate'].forEach(id=>{if($(id)&&!$(id).value)$(id).value=t});
+      const month=t.slice(0,7);if(month>='2026-08'&&month<='2027-06')$('calendarMonth').value=month;
+    }
+
+    async function markDirty(){cloudState.dirty=true;cloudState.lastLocalChange=nowIso();await dbSetMeta('cloudState',cloudState);updateCloudUI();if(cloudSettings.autoSync){clearTimeout(autoSyncTimer);autoSyncTimer=setTimeout(()=>autoSyncIfPossible(),6000)}}
+    async function markSynced(provider){cloudState.dirty=false;cloudState.lastCloudSync=nowIso();cloudState.lastProvider=provider;await dbSetMeta('cloudState',cloudState);updateCloudUI()}
+    function providerName(p){return p==='google'?'Google Drive':p==='microsoft'?'Microsoft OneDrive':'Solo local'}
+    function updateCloudUI(errorText=''){
+      const btn=$('cloudStatusButton'),text=$('cloudStatusText'),title=$('cloudPanelStatus'),detail=$('cloudPanelDetail'),icon=$('cloudPanelIcon');
+      btn.classList.remove('status-local','status-pending','status-synced','status-error');
+      if(errorText){btn.classList.add('status-error');text.textContent='Error de nube';title.textContent='Error de sincronización';detail.textContent=errorText;icon.className='w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl';icon.innerHTML='<i class="fa-solid fa-triangle-exclamation"></i>'}
+      else if(!navigator.onLine){btn.classList.add('status-pending');text.textContent='Sin conexión';title.textContent='Trabajo local sin conexión';detail.textContent='Puedes seguir trabajando. La nube se actualizará cuando vuelvas a conectarte.';icon.className='w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl';icon.innerHTML='<i class="fa-solid fa-wifi"></i>'}
+      else if(cloudState.dirty){btn.classList.add('status-pending');text.textContent='Cambios pendientes';title.textContent='Cambios guardados localmente';detail.textContent='Hay cambios que todavía no han sido respaldados en la nube.';icon.className='w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl';icon.innerHTML='<i class="fa-solid fa-cloud-arrow-up"></i>'}
+      else if(cloudState.lastCloudSync){btn.classList.add('status-synced');text.textContent='Sincronizado';title.textContent='Respaldo actualizado';detail.textContent=`Última copia en ${providerName(cloudState.lastProvider)}: ${fmtDate(cloudState.lastCloudSync)}.`;icon.className='w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl';icon.innerHTML='<i class="fa-solid fa-cloud-circle-check"></i>'}
+      else{btn.classList.add('status-local');text.textContent='Guardado local';title.textContent='Guardado local';detail.textContent='Tus datos están seguros en IndexedDB de este dispositivo.';icon.className='w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-xl';icon.innerHTML='<i class="fa-solid fa-hard-drive"></i>'}
+      $('lastLocalChange').textContent=fmtDate(cloudState.lastLocalChange);$('lastCloudSync').textContent=fmtDate(cloudState.lastCloudSync);$('activeProviderLabel').textContent=providerName(cloudSettings.preferredProvider);$('offlineNotice').classList.toggle('hidden',navigator.onLine);
+    }
+
+    function showSection(id){
+      document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('text-indigo-600','bg-indigo-50'));
+      $('section-'+id).classList.remove('hidden');$('nav-'+id).classList.add('text-indigo-600','bg-indigo-50');
+      if(id==='dashboard')renderDashboard();if(id==='ficha')renderWorkspace();if(id==='calendario')renderCalendar();if(id==='asistencia')renderAttendance();if(id==='actividades')renderActivities();if(id==='evaluacion'){renderRAReport();renderCompetencyMatrix();renderRAConfig()}if(id==='seguimiento')renderSeguimiento();if(id==='seguridad')updateAuthUI();if(id==='nube')updateCloudUI();
+    }
+    async function saveYear(){await dbSetMeta('schoolYear',$('schoolYear').value.trim());await markDirty()}
+
+    function optionHtml(items,valueFn,labelFn,placeholder=''){
+      const opts=items.map(x=>`<option value="${esc(valueFn(x))}">${esc(labelFn(x))}</option>`).join('');
+      return (placeholder?`<option value="">${esc(placeholder)}</option>`:'')+opts;
+    }
+    function refreshSelectors(){
+      const courseOpts=optionHtml(cursos,c=>c.id,cursoLabel,'Selecciona un grupo');
+      ['stCursoSeccion','attCourse','logCourse','editStudentCourse'].forEach(id=>{if($(id)){const cur=$(id).value;$(id).innerHTML=courseOpts; if([...$(id).options].some(o=>o.value===cur))$(id).value=cur}});
+      if($('filterStudentsCourse')){const cur=$('filterStudentsCourse').value;$('filterStudentsCourse').innerHTML='<option value="">Todos los grupos</option>'+optionHtml(cursos,c=>c.id,cursoLabel);if([...$('filterStudentsCourse').options].some(o=>o.value===cur))$('filterStudentsCourse').value=cur}
+      const matOpts=optionHtml(materias,m=>m.id,materiaLabel,'Selecciona una materia/módulo');
+      ['matCurso'].forEach(id=>{}); // matCurso is a course select, set below
+      if($('matCurso'))$('matCurso').innerHTML=courseOpts;
+      ['actMateria','raCfgMateria','raFilterMateria','compFilterMateria','workspaceMateria'].forEach(id=>{if($(id)){const cur=$(id).value;$(id).innerHTML=matOpts;if([...$(id).options].some(o=>o.value===cur))$(id).value=cur}});
+      if($('insMateria')){const cur=$('insMateria').value;$('insMateria').innerHTML='<option value="">General / reutilizable</option>'+optionHtml(materias,m=>m.id,materiaLabel);if([...$('insMateria').options].some(o=>o.value===cur))$('insMateria').value=cur}
+      syncBulkSelectors();
+      if($('filterActivityMateria'))$('filterActivityMateria').innerHTML='<option value="">Todas</option>'+optionHtml(materias,m=>m.id,materiaLabel);
+      const studOpts=optionHtml(alumnos,a=>a.id,a=>{const c=cursoById(a.cursoId);return `${a.nombre}${c?' · '+c.grado+' '+c.seccion:''}`},'Selecciona estudiante');
+      ['raStudent','compStudent','compFilterStudent','conductStudent'].forEach(id=>{if($(id)){const cur=$(id).value;$(id).innerHTML=studOpts;if([...$(id).options].some(o=>o.value===cur))$(id).value=cur}});
+      if($('compName'))$('compName').innerHTML=COMPETENCIAS.map(c=>`<option>${esc(c)}</option>`).join('');
+      syncRAMaterias();syncCompMaterias();syncActivityRA();syncLogMaterias();
+    }
+
+    function renderCursos(){
+      const q=($('filterCursos')?.value||'').toLowerCase(),body=$('tableCursosBody');body.innerHTML='';
+      cursos.filter(c=>Object.values(c).join(' ').toLowerCase().includes(q)).forEach(c=>body.innerHTML+=`<tr><td class="font-semibold">${esc(c.modalidad)}</td><td><div class="font-semibold">${esc(c.grado)}</div><div class="text-xs text-slate-500">${esc(c.especialidad)}</div></td><td><span class="badge">Sec. ${esc(c.seccion)}</span></td><td class="text-right"><button class="danger" onclick="deleteCurso(${JSON.stringify(c.id)})"><i class="fa-solid fa-trash"></i></button></td></tr>`);
+      refreshSelectors();renderDashboardCards();
+    }
+    $('cursoForm').addEventListener('submit',async e=>{e.preventDefault();const item={id:Date.now(),modalidad:$('curModalidad').value,grado:$('curGrado').value,especialidad:$('curEspecialidad').value.trim(),seccion:$('curSeccion').value.trim().toUpperCase()};cursos.push(item);await dbPut('cursos',item);await markDirty();e.target.reset();renderCursos();renderMaterias();renderStudents()});
+    async function deleteCurso(id){const c=cursoById(id);if(!c)return;const nStudents=alumnos.filter(a=>String(a.cursoId)===String(id)).length,nMaterias=materias.filter(m=>String(m.cursoId)===String(id)).length;if(nStudents||nMaterias){toast(`No se puede eliminar ${c.grado} ${c.seccion}: contiene ${nStudents} estudiantes y ${nMaterias} materias/módulos. Reasigna o elimina esos registros primero.`,'error');return}if(!confirm('¿Eliminar este grupo vacío?'))return;cursos=cursos.filter(c=>String(c.id)!==String(id));await dbDelete('cursos',id);await markDirty();renderAll()}
+
+    function renderMaterias(){
+      const q=($('filterMaterias')?.value||'').toLowerCase(),body=$('tableMateriasBody');body.innerHTML='';
+      materias.filter(m=>`${m.codigo} ${m.nombre} ${m.tipo}`.toLowerCase().includes(q)).forEach(m=>{const c=cursoById(m.cursoId);body.innerHTML+=`<tr><td class="font-bold text-indigo-700">${esc(m.codigo||'—')}</td><td><div class="font-semibold">${esc(m.nombre)}</div><div class="text-xs text-slate-400">${esc(m.horas||'—')} h/sem · ${esc(m.ponderacion||100)}%</div></td><td class="text-slate-600">${c?esc(cursoLabel(c)):'Sin grupo'}</td><td><span class="badge">${esc(m.tipo)}</span></td><td class="text-right whitespace-nowrap"><button class="text-indigo-600 hover:text-indigo-800 mr-3" title="Abrir ficha docente" onclick="openWorkspace(${JSON.stringify(m.id)})"><i class="fa-solid fa-folder-open"></i></button><button class="danger" title="Eliminar" onclick="deleteMateria(${JSON.stringify(m.id)})"><i class="fa-solid fa-trash"></i></button></td></tr>`});
+      refreshSelectors();renderDashboardCards();
+    }
+    $('materiaForm').addEventListener('submit',async e=>{e.preventDefault();const item={id:Date.now(),cursoId:Number($('matCurso').value),tipo:$('matTipo').value,codigo:$('matCodigo').value.trim(),nombre:$('matNombre').value.trim(),horas:$('matHoras').value,ponderacion:Number($('matPonderacion').value||100)};materias.push(item);await dbPut('materias',item);await markDirty();e.target.reset();$('matPonderacion').value=100;renderMaterias();renderAll()});
+    async function deleteMateria(id){const m=materiaById(id);if(!m)return;const linked={ra:raNotas.filter(x=>String(x.materiaId)===String(id)),comp:competenciaNotas.filter(x=>String(x.materiaId)===String(id)),acts:actividades.filter(a=>String(resolveActivityMateria(a)?.id)===String(id)),logs:bitacora.filter(x=>String(x.materiaId)===String(id)),ins:instrumentos.filter(x=>String(x.materiaId)===String(id))};const total=Object.values(linked).reduce((n,a)=>n+a.length,0);if(!confirm(`¿Eliminar ${materiaLabel(m)}?${total?` También se eliminarán ${total} registros vinculados para evitar datos huérfanos.`:''}`))return;const linkedActivityIds=new Set(linked.acts.map(x=>String(x.id)));materias=materias.filter(x=>String(x.id)!==String(id));raNotas=raNotas.filter(x=>String(x.materiaId)!==String(id));competenciaNotas=competenciaNotas.filter(x=>String(x.materiaId)!==String(id));actividades=actividades.filter(a=>!linkedActivityIds.has(String(a.id)));bitacora=bitacora.filter(x=>String(x.materiaId)!==String(id));instrumentos=instrumentos.map(x=>String(x.materiaId)===String(id)?{...x,materiaId:null}:x);await Promise.all([dbDelete('materias',id),...linked.ra.map(x=>dbDelete('raNotas',x.id)),...linked.comp.map(x=>dbDelete('competenciaNotas',x.id)),...linked.acts.map(x=>dbDelete('actividades',x.id)),...linked.logs.map(x=>dbDelete('bitacora',x.id)),...linked.ins.map(x=>dbPut('instrumentos',{...x,materiaId:null}))]);await markDirty();renderAll()}
+
+    function normalizedName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9ñ ]/g,' ').replace(/\s+/g,' ').trim()}
+    function renderStudents(){
+      const q=($('filterStudents')?.value||'').toLowerCase(),courseFilter=$('filterStudentsCourse')?.value||'',body=$('tableStudentsBody');body.innerHTML='';
+      alumnos.filter(a=>(!courseFilter||String(a.cursoId)===String(courseFilter))&&a.nombre.toLowerCase().includes(q)).sort((a,b)=>{if(String(a.cursoId)!==String(b.cursoId))return String(a.cursoId).localeCompare(String(b.cursoId));return (Number(a.numero)||999)-(Number(b.numero)||999)||a.nombre.localeCompare(b.nombre)}).forEach(a=>{const c=cursoById(a.cursoId);body.innerHTML+=`<tr><td><div class="font-semibold">${esc(a.nombre)}</div><div class="text-xs text-slate-400">${a.numero?('No. '+esc(a.numero)):''}</div></td><td>${c?esc(cursoLabel(c)):'Sin grupo'}</td><td>${c?`<span class="badge">${esc(c.modalidad)}</span>`:'—'}</td><td class="text-right whitespace-nowrap"><button class="text-sky-600 hover:text-sky-800 mr-3" title="Reporte" onclick="openStudentReport(${JSON.stringify(a.id)})"><i class="fa-solid fa-chart-column"></i></button><button class="text-indigo-600 hover:text-indigo-800 mr-3" title="Editar / reasignar" onclick="editStudent(${JSON.stringify(a.id)})"><i class="fa-solid fa-pen"></i></button><button class="danger" title="Eliminar" onclick="deleteStudent(${JSON.stringify(a.id)})"><i class="fa-solid fa-trash"></i></button></td></tr>`});
+      if(!body.innerHTML)body.innerHTML='<tr><td colspan="4" class="text-center text-slate-400">No hay estudiantes con este filtro.</td></tr>';
+      refreshSelectors();renderDashboardCards();renderIntegrityAudit();
+    }
+    $('studentForm').addEventListener('submit',async e=>{e.preventDefault();const courseId=Number($('stCursoSeccion').value),name=$('stNombre').value.trim(),number=$('stNumero').value.trim();if(alumnos.some(a=>String(a.cursoId)===String(courseId)&&normalizedName(a.nombre)===normalizedName(name))){toast('Ese estudiante ya aparece en el mismo grupo.','error');return}const item={id:Date.now(),nombre:name,numero:number,cursoId};alumnos.push(item);await dbPut('alumnos',item);await markDirty();e.target.reset();renderStudents();toast('Estudiante matriculado.','success')});
+    async function deleteStudent(id){const st=alumnoById(id);if(!st)return;const linked={att:asistencias.filter(x=>String(x.studentId)===String(id)),ra:raNotas.filter(x=>String(x.studentId)===String(id)),comp:competenciaNotas.filter(x=>String(x.studentId)===String(id)),cond:conducta.filter(x=>String(x.studentId)===String(id)),eval:evaluaciones.filter(x=>String(x.studentId)===String(id)||String(x.estudianteId)===String(id))};const total=Object.values(linked).reduce((n,a)=>n+a.length,0);if(!confirm(`¿Eliminar a ${st.nombre}?${total?` Se eliminarán también ${total} registros vinculados de asistencia/evaluación/seguimiento.`:''}`))return;alumnos=alumnos.filter(a=>String(a.id)!==String(id));asistencias=asistencias.filter(x=>String(x.studentId)!==String(id));raNotas=raNotas.filter(x=>String(x.studentId)!==String(id));competenciaNotas=competenciaNotas.filter(x=>String(x.studentId)!==String(id));conducta=conducta.filter(x=>String(x.studentId)!==String(id));evaluaciones=evaluaciones.filter(x=>String(x.studentId)!==String(id)&&String(x.estudianteId)!==String(id));await Promise.all([dbDelete('alumnos',id),...linked.att.map(x=>dbDelete('asistencias',x.id)),...linked.ra.map(x=>dbDelete('raNotas',x.id)),...linked.comp.map(x=>dbDelete('competenciaNotas',x.id)),...linked.cond.map(x=>dbDelete('conducta',x.id)),...linked.eval.map(x=>dbDelete('evaluaciones',x.id))]);await markDirty();renderAll()}
+
+    function syncBulkSelectors(){if(!$('bulkModalidad'))return;const mods=[...new Set(cursos.map(c=>c.modalidad))].sort(),curMod=$('bulkModalidad').value;$('bulkModalidad').innerHTML=mods.map(x=>`<option>${esc(x)}</option>`).join('')||'<option value="">Sin grupos</option>';if(mods.includes(curMod))$('bulkModalidad').value=curMod;syncBulkGrades(false);syncBulkCourses()}
+    function syncBulkGrades(updateCourses=true){if(!$('bulkGrado'))return;const mod=$('bulkModalidad').value,grades=[...new Set(cursos.filter(c=>c.modalidad===mod).map(c=>c.grado))].sort(),cur=$('bulkGrado').value;$('bulkGrado').innerHTML=grades.map(g=>`<option>${esc(g)}</option>`).join('')||'<option value="">Sin grados</option>';if(grades.includes(cur))$('bulkGrado').value=cur;if(updateCourses)syncBulkCourses()}
+    function syncBulkCourses(){if(!$('bulkCourse'))return;const mod=$('bulkModalidad').value,grade=$('bulkGrado').value,items=cursos.filter(c=>c.modalidad===mod&&c.grado===grade),cur=$('bulkCourse').value;$('bulkCourse').innerHTML=optionHtml(items,c=>c.id,c=>`${c.especialidad} · Sección ${c.seccion}`,'Selecciona grupo');if([...$('bulkCourse').options].some(o=>o.value===cur))$('bulkCourse').value=cur;renderBulkDestination();previewBulkStudents()}
+    function renderBulkDestination(){const c=cursoById($('bulkCourse')?.value);if($('bulkDestination'))$('bulkDestination').textContent=c?`${c.modalidad} · ${c.grado} · ${c.especialidad} · Sección ${c.seccion}`:'Selecciona el grupo que recibirá la lista.'}
+    function parseBulkStudents(){const text=$('bulkStudents')?.value||'',lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),auto=$('bulkAutoNumber')?.checked!==false,courseId=$('bulkCourse')?.value;const rows=lines.slice(0,250).map((line,i)=>{let number='',name=line;const cells=line.split(/\t+/).map(x=>x.trim()).filter(Boolean);if(cells.length>=2&&/^\d{1,3}$/.test(cells[0])){number=cells[0];name=cells.slice(1).join(' ')}else{const m=line.match(/^\s*(\d{1,3})\s*[\.\-\)\:]\s*(.+)$/);if(m){number=m[1];name=m[2]}}return{number,name:name.replace(/\s+/g,' ').trim(),index:i+1}}).filter(x=>x.name);if(auto){const used=new Set(alumnos.filter(a=>String(a.cursoId)===String(courseId)&&a.numero).map(a=>String(a.numero).trim()));rows.forEach(r=>{if(r.number)used.add(String(r.number).trim())});let next=1;rows.forEach(r=>{if(!r.number){while(used.has(String(next)))next++;r.number=String(next);used.add(r.number);next++}})}return rows}
+    function previewBulkStudents(){if(!$('bulkPreviewBody'))return;const rows=parseBulkStudents(),courseId=$('bulkCourse').value,skip=$('bulkSkipDuplicates').checked,seen=new Set(),seenNums=new Set(),body=$('bulkPreviewBody');body.innerHTML='';let dup=0;rows.forEach(r=>{const key=normalizedName(r.name),numKey=String(r.number||''),existing=alumnos.some(a=>String(a.cursoId)===String(courseId)&&normalizedName(a.nombre)===key),existingNum=numKey&&alumnos.some(a=>String(a.cursoId)===String(courseId)&&String(a.numero||'')===numKey),inList=seen.has(key),numInList=numKey&&seenNums.has(numKey);seen.add(key);if(numKey)seenNums.add(numKey);const isDup=existing||inList,numDup=!!existingNum||!!numInList;if(isDup||numDup)dup++;const status=isDup?(skip?'Se omitirá':'Nombre duplicado'):numDup?(skip?'Se omitirá · número repetido':'Número repetido'):'Listo';body.innerHTML+=`<tr><td>${esc(r.number||'—')}</td><td class="font-semibold">${esc(r.name)}</td><td>${(isDup||numDup)?`<span class="warning-chip"><i class="fa-solid fa-copy"></i>${status}</span>`:`<span class="ok-chip"><i class="fa-solid fa-check"></i>Listo</span>`}</td></tr>`});if(!rows.length)body.innerHTML='<tr><td colspan="3" class="text-center text-slate-400">Pega una lista para previsualizar.</td></tr>';$('bulkCount').textContent=`${rows.length} detectados`;$('bulkWarnings').innerHTML=dup?`<div class="audit-warn">Se detectaron ${dup} posibles duplicados de nombre o número. Revisa la vista previa antes de importar.</div>`:''}
+    async function importBulkStudents(){const c=cursoById($('bulkCourse').value),rows=parseBulkStudents();if(!c){toast('Selecciona primero modalidad, grado y grupo/sección.','error');return}if(!rows.length){toast('Pega al menos un estudiante.','error');return}const skip=$('bulkSkipDuplicates').checked,seen=new Set(),seenNums=new Set();let added=0,skipped=0;for(const r of rows){const key=normalizedName(r.name),numKey=String(r.number||''),dupName=seen.has(key)||alumnos.some(a=>String(a.cursoId)===String(c.id)&&normalizedName(a.nombre)===key),dupNum=numKey&&(seenNums.has(numKey)||alumnos.some(a=>String(a.cursoId)===String(c.id)&&String(a.numero||'')===numKey));seen.add(key);if(numKey)seenNums.add(numKey);if((dupName||dupNum)&&skip){skipped++;continue}const item={id:uniqueId('stu'),nombre:r.name,numero:r.number,cursoId:c.id};alumnos.push(item);await dbPut('alumnos',item);added++}await markDirty();renderAll();previewBulkStudents();toast(`${added} estudiantes matriculados${skipped?` · ${skipped} duplicados omitidos`:''}.`,'success')}
+    function clearBulkStudents(){$('bulkStudents').value='';previewBulkStudents()}
+    function editStudent(id){const a=alumnoById(id);if(!a)return;refreshSelectors();$('editStudentId').value=a.id;$('editStudentName').value=a.nombre;$('editStudentNumber').value=a.numero||'';$('editStudentCourse').value=String(a.cursoId);$('studentEditModal').classList.remove('hidden')}
+    function closeStudentEdit(){$('studentEditModal').classList.add('hidden')}
+    async function saveStudentEdit(){const id=$('editStudentId').value,a=alumnoById(id);if(!a)return;const name=$('editStudentName').value.trim(),numero=$('editStudentNumber').value.trim(),courseRaw=$('editStudentCourse').value,cursoId=isNaN(Number(courseRaw))?courseRaw:Number(courseRaw);if(!name){toast('El nombre no puede quedar vacío.','error');return}if(alumnos.some(x=>String(x.id)!==String(id)&&String(x.cursoId)===String(cursoId)&&normalizedName(x.nombre)===normalizedName(name))){toast('Ya existe un estudiante con ese nombre en el grupo destino.','error');return}Object.assign(a,{nombre:name,numero,cursoId,updatedAt:nowIso()});await dbPut('alumnos',a);await markDirty();closeStudentEdit();renderAll();toast('Estudiante actualizado.','success')}
+
+    // -------- Calendario --------
+    function calendarEventsOn(date){
+      const events=calendario.filter(e=>dateInSpan(date,e.start,e.end||e.start)).map(e=>({...e,kind:'calendar'}));
+      const acts=actividades.filter(a=>a.date===date).map(a=>({id:a.id,start:a.date,end:a.date,title:`${a.code||'Actividad'} · ${a.title}`,category:'actividad',official:false,noClass:false,kind:'activity',moduleCode:a.moduleCode,materiaId:a.materiaId}));
+      return [...events,...acts];
+    }
+    function isWeekend(date){const [y,m,d]=date.split('-').map(Number),day=new Date(y,m-1,d).getDay();return day===0||day===6}
+    function isNoClassDate(date){
+      if(date<'2026-08-24'||date>'2027-06-18')return true;
+      if(isWeekend(date))return true;
+      return calendario.some(e=>e.noClass&&dateInSpan(date,e.start,e.end||e.start));
+    }
+    function calendarClass(cat){return cat==='actividad'?'calendar-activity':cat==='evaluacion'?'calendar-evaluacion':cat==='nolectivo'?'calendar-nolectivo':cat==='recuperacion'?'calendar-recuperacion':cat==='centro'?'calendar-centro':'calendar-official'}
+    function moveCalendarMonth(delta){const [y,m]=$('calendarMonth').value.split('-').map(Number),d=new Date(y,m-1+delta,1),v=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(v>='2026-08'&&v<='2027-06'){$('calendarMonth').value=v;renderCalendar()}}
+    function renderCalendar(){
+      const month=$('calendarMonth').value||'2026-08',[y,m]=month.split('-').map(Number),first=new Date(y,m-1,1),days=new Date(y,m,0).getDate();
+      const offset=(first.getDay()+6)%7,grid=$('calendarGrid');grid.innerHTML='';
+      const total=Math.ceil((offset+days)/7)*7;
+      for(let i=0;i<total;i++){
+        const day=i-offset+1;
+        if(day<1||day>days){grid.innerHTML+='<div class="cal-day outside"></div>';continue}
+        const date=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`,events=calendarEventsOn(date),classes=['cal-day'];if(isWeekend(date))classes.push('weekend');if(calendario.some(e=>e.noClass&&dateInSpan(date,e.start,e.end||e.start)))classes.push('no-class');
+        const chips=events.slice(0,4).map(e=>`<span class="cal-chip ${calendarClass(e.category)}" title="${esc(e.title)}">${esc(e.title)}</span>`).join('')+(events.length>4?`<span class="text-[9px] text-slate-400">+${events.length-4} más</span>`:'');
+        grid.innerHTML+=`<div class="${classes.join(' ')}"><div class="cal-number">${day}</div>${chips}</div>`;
+      }
+      const list=$('calendarEventsList');list.innerHTML='';
+      const monthStart=`${month}-01`,monthEnd=`${month}-${String(days).padStart(2,'0')}`;
+      const merged=[
+        ...calendario.filter(e=>(e.start<=monthEnd&&(e.end||e.start)>=monthStart)),
+        ...actividades.filter(a=>a.date>=monthStart&&a.date<=monthEnd).map(a=>({id:a.id,start:a.date,end:a.date,title:`${a.code||''} ${a.title}`.trim(),category:'actividad',activity:true,moduleCode:a.moduleCode,materiaId:a.materiaId}))
+      ].sort((a,b)=>a.start.localeCompare(b.start));
+      if(!merged.length)list.innerHTML='<p class="text-xs text-slate-400">No hay eventos en este mes.</p>';
+      merged.forEach(e=>{
+        const conflict=e.activity&&isNoClassDate(e.start);
+        list.innerHTML+=`<div class="flex items-start justify-between gap-3 border rounded-lg p-3"><div><div class="flex flex-wrap items-center gap-2"><span class="cal-legend ${calendarClass(e.category)}">${esc(e.category)}</span><strong class="text-sm">${esc(e.title)}</strong>${conflict?'<span class="warning-chip"><i class="fa-solid fa-triangle-exclamation"></i> conflicto</span>':''}</div><p class="text-xs text-slate-500 mt-1">${esc(fmtDate(e.start))}${e.end&&e.end!==e.start?' → '+esc(fmtDate(e.end)):''}${e.official?' · MINERD':''}</p></div>${(!e.official&&!e.activity)?`<button class="danger" onclick="deleteCalendarEvent('${esc(e.id)}')"><i class="fa-solid fa-trash"></i></button>`:''}</div>`;
+      });
+    }
+    $('calendarForm').addEventListener('submit',async e=>{e.preventDefault();const item={id:uniqueId('cal'),start:$('calDate').value,end:$('calEndDate').value||$('calDate').value,title:$('calTitle').value.trim(),category:$('calCategory').value,noClass:$('calNoClass').checked,official:false};if(item.end<item.start){toast('La fecha final no puede ser anterior a la inicial.','error');return}calendario.push(item);await dbPut('calendario',item);await markDirty();e.target.reset();$('calDate').value=todayIso();renderCalendar()});
+    async function deleteCalendarEvent(id){calendario=calendario.filter(e=>e.id!==id);await dbDelete('calendario',id);await markDirty();renderCalendar()}
+
+    // -------- Asistencia --------
+    function studentsForCourse(courseId){return alumnos.filter(a=>String(a.cursoId)===String(courseId)).sort((a,b)=>(Number(a.numero)||999)-(Number(b.numero)||999)||a.nombre.localeCompare(b.nombre))}
+    function attendanceRecord(studentId,date){return asistencias.find(a=>String(a.studentId)===String(studentId)&&a.date===date)}
+    function renderAttendance(){
+      const courseId=$('attCourse').value,date=$('attDate').value||todayIso(),roster=studentsForCourse(courseId),body=$('attRosterBody');body.innerHTML='';
+      const allowed=!isNoClassDate(date)||$('attOverride').checked,notice=$('attDayNotice');
+      if(!allowed)notice.innerHTML='<div class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-800"><i class="fa-solid fa-calendar-xmark mr-2"></i>El calendario marca esta fecha como no lectiva. Activa “registro extraordinario” solo si realmente hubo docencia.</div>';
+      else if(isNoClassDate(date))notice.innerHTML='<div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">Registro extraordinario habilitado para una fecha no lectiva.</div>';
+      else notice.innerHTML='<div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">Día lectivo habilitado para asistencia.</div>';
+      roster.forEach((s,i)=>{const rec=attendanceRecord(s.id,date)||{},status=rec.status||'P';body.innerHTML+=`<tr data-student="${esc(s.id)}"><td>${esc(s.numero||i+1)}</td><td class="font-semibold">${esc(s.nombre)}</td><td><select class="field att-status" ${allowed?'':'disabled'}><option ${status==='P'?'selected':''}>P</option><option ${status==='A'?'selected':''}>A</option><option ${status==='T'?'selected':''}>T</option><option ${status==='E'?'selected':''}>E</option></select></td><td><input class="field att-note" value="${esc(rec.note||'')}" ${allowed?'':'disabled'} placeholder="Opcional"></td></tr>`});
+      if(!roster.length)body.innerHTML='<tr><td colspan="4" class="text-center text-slate-400">No hay estudiantes en este grupo.</td></tr>';
+      renderAttendanceSummary();
+    }
+    function markAllAttendance(status){document.querySelectorAll('#attRosterBody .att-status').forEach(s=>{if(!s.disabled)s.value=status})}
+    async function saveAttendance(){
+      const date=$('attDate').value,courseId=$('attCourse').value;if(!date||!courseId)return;
+      if(isNoClassDate(date)&&!$('attOverride').checked){toast('El calendario marca la fecha como no lectiva.','error');return}
+      const rows=[...document.querySelectorAll('#attRosterBody tr[data-student]')];
+      for(const row of rows){const studentId=row.dataset.student,item={id:`${date}-${studentId}`,studentId:isNaN(Number(studentId))?studentId:Number(studentId),courseId:isNaN(Number(courseId))?courseId:Number(courseId),date,status:row.querySelector('.att-status').value,note:row.querySelector('.att-note').value.trim(),updatedAt:nowIso()};const idx=asistencias.findIndex(a=>a.id===item.id);if(idx>=0)asistencias[idx]=item;else asistencias.push(item);await dbPut('asistencias',item)}
+      await markDirty();toast('Asistencia guardada.','success');renderAttendanceSummary();
+    }
+    function renderAttendanceSummary(){
+      const courseId=$('attCourse').value,date=$('attDate').value||todayIso(),month=date.slice(0,7),body=$('attSummaryBody');body.innerHTML='';
+      studentsForCourse(courseId).forEach(s=>{
+        const rs=asistencias.filter(a=>String(a.studentId)===String(s.id)&&a.date.startsWith(month)),counts={P:0,A:0,T:0,E:0};rs.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
+        const n=rs.length,penalty=counts.T>2?1:0,effective=Math.max(0,counts.P+counts.T+counts.E-penalty),pct=n?effective/n*100:0;
+        body.innerHTML+=`<tr><td class="font-semibold">${esc(s.nombre)}</td><td>${counts.P}</td><td>${counts.A}</td><td>${counts.T}</td><td>${counts.E}</td><td>${n}</td><td class="${pct>=70?'score-pass':'score-fail'}">${n?pct.toFixed(1)+'%':'—'}</td></tr>`;
+      });
+      if(!body.innerHTML)body.innerHTML='<tr><td colspan="7" class="text-center text-slate-400">Sin estudiantes.</td></tr>';
+    }
+
+    // -------- Actividades --------
+    function resolveActivityMateria(a){return a.materiaId?materiaById(a.materiaId):materias.find(m=>m.codigo&&m.codigo===a.moduleCode)}
+    function syncActivityRA(){const m=materiaById($('actMateria')?.value),defs=ras.filter(r=>r.moduleCode===moduleCodeForMateria(m));if($('actRA'))$('actRA').innerHTML='<option value="">Sin vincular</option>'+defs.map(r=>`<option value="${esc(r.code)}">${esc(r.code)} · ${r.weight} pts</option>`).join('')}
+    $('activityForm').addEventListener('submit',async e=>{e.preventDefault();const m=materiaById($('actMateria').value);if(!m)return;const item={id:uniqueId('act'),materiaId:m.id,moduleCode:m.codigo||'',date:$('actDate').value,code:$('actCode').value.trim(),title:$('actTitle').value.trim(),points:Number($('actPoints').value||0),type:$('actType').value,raCode:$('actRA').value,source:'AulaGestión RD',seeded:false};actividades.push(item);await dbPut('actividades',item);await markDirty();e.target.reset();$('actDate').value=todayIso();$('actPoints').value=1;renderActivities();renderCalendar()});
+    function renderActivities(){
+      const filter=$('filterActivityMateria')?.value||'',body=$('activityTableBody');body.innerHTML='';
+      const rows=[...actividades].sort((a,b)=>a.date.localeCompare(b.date));
+      rows.filter(a=>!filter||String(resolveActivityMateria(a)?.id||'')===String(filter)).forEach(a=>{const m=resolveActivityMateria(a),conflict=isNoClassDate(a.date);body.innerHTML+=`<tr><td class="whitespace-nowrap">${esc(fmtDate(a.date))}</td><td class="font-bold">${esc(a.code||'—')}</td><td><div class="font-semibold">${esc(a.title)}</div><div class="text-[10px] text-slate-400">${esc(a.source||'')}</div></td><td>${esc(m?materiaLabel(m):(a.moduleCode||'Sin asignar'))}</td><td>${a.points}</td><td>${esc(a.raCode||'—')}</td><td>${conflict?'<span class="warning-chip"><i class="fa-solid fa-triangle-exclamation"></i>No lectivo</span>':'<span class="ok-chip"><i class="fa-solid fa-check"></i>Compatible</span>'}</td><td class="text-right">${a.seeded?'':`<button class="danger" onclick="deleteActivity('${esc(a.id)}')"><i class="fa-solid fa-trash"></i></button>`}</td></tr>`});
+      $('legacyActivityCount').textContent=actividades.filter(a=>a.seeded).length;
+    }
+    async function deleteActivity(id){actividades=actividades.filter(a=>a.id!==id);await dbDelete('actividades',id);await markDirty();renderActivities();renderCalendar()}
+
+    // -------- RA --------
+    function modulesForStudent(student){return student?materias.filter(m=>String(m.cursoId)===String(student.cursoId)&&m.tipo==='Módulo Formativo'):materias.filter(m=>m.tipo==='Módulo Formativo')}
+    function syncRAMaterias(){const s=alumnoById($('raStudent')?.value),mods=modulesForStudent(s),cur=$('raMateria')?.value;if($('raMateria')){$('raMateria').innerHTML=optionHtml(mods,m=>m.id,materiaLabel,'Selecciona módulo');if([...$('raMateria').options].some(o=>o.value===cur))$('raMateria').value=cur}syncRADefs()}
+    function syncRADefs(){const m=materiaById($('raMateria')?.value),defs=ras.filter(r=>r.moduleCode===moduleCodeForMateria(m)).sort((a,b)=>a.code.localeCompare(b.code));if($('raDef'))$('raDef').innerHTML=defs.map(r=>`<option value="${esc(r.id)}">${esc(r.code)} · ${r.weight} pts · mínimo ${r.min}</option>`).join('')||'<option value="">Configura los RA de este módulo</option>';updateRALimits()}
+    function updateRALimits(){const r=ras.find(x=>x.id===$('raDef')?.value);['raCRA','raRP1','raRP2'].forEach(id=>{if($(id))$(id).max=r?r.weight:100});if($('raRuleNote'))$('raRuleNote').textContent=r?`${r.code}: peso ${r.weight} puntos; mínimo aprobatorio del RA ${r.min} puntos.`:'Sin RA seleccionado.'}
+    $('raForm').addEventListener('submit',async e=>{e.preventDefault();const s=alumnoById($('raStudent').value),m=materiaById($('raMateria').value),r=ras.find(x=>x.id===$('raDef').value);if(!s||!m||!r){toast('Selecciona estudiante, módulo y RA.','error');return}const cra=Number($('raCRA').value||0),rp1=$('raRP1').value===''?null:Number($('raRP1').value),rp2=$('raRP2').value===''?null:Number($('raRP2').value);if([cra,rp1,rp2].filter(v=>v!==null).some(v=>v<0||v>r.weight)){toast(`Las puntuaciones de ${r.code} deben estar entre 0 y ${r.weight}.`,'error');return}const best=Math.max(cra,rp1??-Infinity,rp2??-Infinity),item={id:`${s.id}-${m.id}-${r.id}`,studentId:s.id,materiaId:m.id,raId:r.id,raCode:r.code,cra,rp1,rp2,best,updatedAt:nowIso()};const idx=raNotas.findIndex(x=>x.id===item.id);if(idx>=0)raNotas[idx]=item;else raNotas.push(item);await dbPut('raNotas',item);await markDirty();$('raCRA').value='';$('raRP1').value='';$('raRP2').value='';renderRAReport();toast('Resultado de RA guardado.','success')});
+    function renderRAReport(){
+      const select=$('raFilterMateria');if(select&&!select.options.length)select.innerHTML=optionHtml(materias.filter(m=>m.tipo==='Módulo Formativo'),m=>m.id,materiaLabel,'Selecciona módulo');
+      const m=materiaById(select?.value),body=$('raResultsBody');if(!body)return;body.innerHTML='';
+      if(!m){body.innerHTML='<tr><td colspan="5" class="text-center text-slate-400">Selecciona un módulo.</td></tr>';return}
+      const defs=ras.filter(r=>r.moduleCode===m.codigo).sort((a,b)=>a.code.localeCompare(b.code)),students=studentsForCourse(m.cursoId);
+      students.forEach(s=>{const notes=defs.map(r=>({r,n:raNotas.find(n=>String(n.studentId)===String(s.id)&&String(n.materiaId)===String(m.id)&&n.raId===r.id)})),complete=notes.filter(x=>x.n).length,total=notes.reduce((sum,x)=>sum+(x.n?.best||0),0),finalReady=defs.length>0&&complete===defs.length,status=!finalReady?'Pendiente':total>=70?'Aprobado':'Reprobado';const detail=notes.map(x=>`<span class="inline-block mr-2 mb-1"><strong>${esc(x.r.code)}</strong> ${x.n?`${x.n.best}/${x.r.weight}${x.n.best<x.r.min?' ⚠':''}`:'—'}</span>`).join('');body.innerHTML+=`<tr><td class="font-semibold">${esc(s.nombre)}</td><td class="text-xs">${detail}</td><td>${complete}/${defs.length}</td><td class="font-extrabold">${finalReady?total.toFixed(1):'—'}</td><td><span class="${status==='Aprobado'?'score-pass':status==='Reprobado'?'score-fail':'text-slate-500 font-bold'}">${status}</span></td></tr>`});
+      if(!students.length)body.innerHTML='<tr><td colspan="5" class="text-center text-slate-400">No hay estudiantes en el grupo del módulo.</td></tr>';
+    }
+    $('raConfigForm').addEventListener('submit',async e=>{e.preventDefault();const m=materiaById($('raCfgMateria').value),code=$('raCfgCode').value.trim().toUpperCase(),weight=Number($('raCfgWeight').value);if(!m||!code||!weight)return;const id=`${m.codigo||m.id}-${code}`,item={id,moduleCode:m.codigo||String(m.id),code,description:$('raCfgDescription').value.trim()||code,weight,min:weight*.7,source:'AulaGestión RD'};const idx=ras.findIndex(r=>r.id===id);if(idx>=0)ras[idx]=item;else ras.push(item);await dbPut('ras',item);await markDirty();e.target.reset();renderRAConfig();syncRADefs();syncActivityRA();renderRAReport()});
+    function renderRAConfig(){const box=$('raConfigList');if(!box)return;box.innerHTML=ras.sort((a,b)=>`${a.moduleCode}${a.code}`.localeCompare(`${b.moduleCode}${b.code}`)).map(r=>`<span class="badge">${esc(r.moduleCode)} · ${esc(r.code)} ${r.weight} pts / mín. ${r.min}</span>`).join('')}
+
+    // -------- Competencias --------
+    function subjectsForStudent(student){return student?materias.filter(m=>String(m.cursoId)===String(student.cursoId)&&m.tipo!=='Módulo Formativo'):materias.filter(m=>m.tipo!=='Módulo Formativo')}
+    function syncCompMaterias(){const s=alumnoById($('compStudent')?.value),subs=subjectsForStudent(s),cur=$('compMateria')?.value;if($('compMateria')){$('compMateria').innerHTML=optionHtml(subs,m=>m.id,materiaLabel,'Selecciona asignatura');if([...$('compMateria').options].some(o=>o.value===cur))$('compMateria').value=cur}}
+    $('compForm').addEventListener('submit',async e=>{e.preventDefault();const s=alumnoById($('compStudent').value),m=materiaById($('compMateria').value);if(!s||!m){toast('Selecciona estudiante y asignatura.','error');return}const score=Number($('compScore').value),rec=$('compRecovery').value===''?null:Number($('compRecovery').value),effective=Math.max(score,rec??-Infinity),period=$('compPeriod').value,competency=$('compName').value,item={id:`${s.id}-${m.id}-${period}-${competency}`,studentId:s.id,materiaId:m.id,period,competency,score,recovery:rec,effective,updatedAt:nowIso()};const idx=competenciaNotas.findIndex(x=>x.id===item.id);if(idx>=0)competenciaNotas[idx]=item;else competenciaNotas.push(item);await dbPut('competenciaNotas',item);await markDirty();$('compScore').value='';$('compRecovery').value='';renderCompetencyMatrix();toast('Competencia guardada.','success')});
+    function effectiveComp(studentId,materiaId,period,comp){return competenciaNotas.find(n=>String(n.studentId)===String(studentId)&&String(n.materiaId)===String(materiaId)&&n.period===period&&n.competency===comp)?.effective}
+    function renderCompetencyMatrix(){
+      const s=alumnoById($('compFilterStudent')?.value),m=materiaById($('compFilterMateria')?.value),box=$('compMatrix');if(!box)return;
+      if(!s||!m){box.innerHTML='<p class="text-xs text-slate-400">Selecciona estudiante y asignatura.</p>';return}
+      const periods=['P1','P2','P3','P4'];
+      let html='<table class="table"><thead><tr><th>Competencia</th>'+periods.map(p=>`<th>${p}</th>`).join('')+'</tr></thead><tbody>';
+      COMPETENCIAS.forEach(c=>{html+=`<tr><td class="font-semibold">${esc(c)}</td>`+periods.map(p=>{const v=effectiveComp(s.id,m.id,p,c);return `<td class="${v==null?'':v>=70?'score-pass':'score-fail'}">${v==null?'—':v}</td>`}).join('')+'</tr>'});
+      html+='</tbody></table><div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">';
+      periods.forEach(p=>{const groups=COMP_GROUPS.map(g=>{const vals=g.items.map(c=>effectiveComp(s.id,m.id,p,c)).filter(v=>v!=null);return {name:g.name,val:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null}}),valid=groups.filter(g=>g.val!=null),avg=valid.length?valid.reduce((a,b)=>a+b.val,0)/valid.length:null;html+=`<div class="mini-stat"><span>${p} · Promedio agrupado</span><strong class="${avg==null?'':avg>=70?'score-pass':'score-fail'}">${avg==null?'—':avg.toFixed(1)}</strong><div class="text-[10px] text-slate-500 mt-2">${groups.map(g=>`${esc(g.name)}: ${g.val==null?'—':g.val.toFixed(1)}`).join('<br>')}</div></div>`});
+      html+='</div>';box.innerHTML=html;
+    }
+
+    // -------- Seguimiento --------
+    function syncLogMaterias(){const cId=$('logCourse')?.value,ms=materias.filter(m=>String(m.cursoId)===String(cId));if($('logMateria'))$('logMateria').innerHTML=optionHtml(ms,m=>m.id,materiaLabel,'Selecciona materia')}
+    $('logForm').addEventListener('submit',async e=>{e.preventDefault();const item={id:uniqueId('log'),date:$('logDate').value,courseId:Number($('logCourse').value),materiaId:Number($('logMateria').value)||null,topic:$('logTopic').value.trim(),notes:$('logNotes').value.trim()};bitacora.push(item);await dbPut('bitacora',item);await markDirty();e.target.reset();$('logDate').value=todayIso();renderSeguimiento()});
+    $('conductForm').addEventListener('submit',async e=>{e.preventDefault();const item={id:uniqueId('cond'),studentId:Number($('conductStudent').value),date:$('conductDate').value,type:$('conductType').value,points:Number($('conductPoints').value||0),notes:$('conductNotes').value.trim()};conducta.push(item);await dbPut('conducta',item);await markDirty();e.target.reset();$('conductDate').value=todayIso();$('conductPoints').value=-1;renderSeguimiento()});
+    $('instrumentForm').addEventListener('submit',async e=>{e.preventDefault();const criteria=$('insCriteria').value.split(/\n+/).map(x=>x.trim()).filter(Boolean).map(line=>{const [name,max]=line.split('|');return{name:name.trim(),max:Number(max)||1}}),matId=$('insMateria').value,item={id:uniqueId('ins'),name:$('insName').value.trim(),type:$('insType').value,total:Number($('insTotal').value||0),criteria,materiaId:matId?(isNaN(Number(matId))?matId:Number(matId)):null,source:'AulaGestión RD'};instrumentos.push(item);await dbPut('instrumentos',item);await markDirty();e.target.reset();$('insTotal').value=10;refreshSelectors();renderSeguimiento();renderWorkspace()});
+    function renderSeguimiento(){
+      syncLogMaterias();
+      const logBody=$('logBody');logBody.innerHTML='';[...bitacora].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).forEach(l=>{const c=cursoById(l.courseId),m=materiaById(l.materiaId);logBody.innerHTML+=`<tr><td>${esc(fmtDate(l.date))}</td><td>${esc(c?c.grado+' '+c.seccion:'—')}</td><td><div class="font-semibold">${esc(l.topic)}</div><div class="text-[10px] text-slate-400">${esc(m?.nombre||'')} ${esc(l.notes||'')}</div></td><td><button class="danger" onclick="deleteLog('${esc(l.id)}')"><i class="fa-solid fa-trash"></i></button></td></tr>`});
+      const cBody=$('conductBody');cBody.innerHTML='';[...conducta].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).forEach(c=>cBody.innerHTML+=`<tr><td>${esc(fmtDate(c.date))}</td><td>${esc(alumnoById(c.studentId)?.nombre||'—')}</td><td><div class="font-semibold">${esc(c.type)}</div><div class="text-[10px] text-slate-400">${esc(c.notes||'')}</div></td><td class="${c.points>=0?'score-pass':'score-fail'}">${c.points>0?'+':''}${c.points}</td><td><button class="danger" onclick="deleteConduct('${esc(c.id)}')"><i class="fa-solid fa-trash"></i></button></td></tr>`);
+      const cards=$('instrumentCards');cards.innerHTML=instrumentos.map(ins=>`<div class="border rounded-xl p-4"><div class="flex items-start justify-between gap-3"><div><span class="badge">${esc(ins.type)}</span><h3 class="font-extrabold mt-2">${esc(ins.name)}</h3><p class="text-xs text-slate-400">${esc(ins.materiaId?materiaLabel(materiaById(ins.materiaId)||{nombre:'Materia no disponible'}):'General / reutilizable')} · ${esc(ins.source||'')}</p></div><strong class="text-lg">${ins.total||'—'} pts</strong></div><div class="mt-3 space-y-2">${(ins.criteria||[]).map(c=>`<div class="flex justify-between gap-3 text-xs border-t pt-2"><span><strong>${esc(c.name)}</strong>${c.guide?'<br><span class="text-slate-500">'+esc(c.guide)+'</span>':''}</span><span>${c.max??''}</span></div>`).join('')}</div></div>`).join('');
+    }
+    async function deleteLog(id){bitacora=bitacora.filter(x=>x.id!==id);await dbDelete('bitacora',id);await markDirty();renderSeguimiento()}
+    async function deleteConduct(id){conducta=conducta.filter(x=>x.id!==id);await dbDelete('conducta',id);await markDirty();renderSeguimiento()}
+
+    // -------- Ficha docente / reportes --------
+    let currentStudentReport={studentId:null,materiaId:null};
+    function openWorkspace(materiaId){showSection('ficha');refreshSelectors();$('workspaceMateria').value=String(materiaId);renderWorkspace()}
+    function workspaceIsETP(m){const c=cursoById(m?.cursoId);return !!m&&(m.tipo==='Módulo Formativo'||String(c?.modalidad||'').toLowerCase().includes('técnico'))}
+    function attendanceStatsForStudent(studentId){const rs=asistencias.filter(a=>String(a.studentId)===String(studentId)),counts={P:0,A:0,T:0,E:0};rs.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);const total=rs.length,attended=counts.P+counts.T+counts.E;return{...counts,total,pct:total?attended/total*100:null}}
+    function raSummaryForStudent(s,m){const defs=ras.filter(r=>r.moduleCode===m.codigo).sort((a,b)=>a.code.localeCompare(b.code)),notes=defs.map(r=>({r,n:raNotas.find(n=>String(n.studentId)===String(s.id)&&String(n.materiaId)===String(m.id)&&n.raId===r.id)})),complete=notes.filter(x=>x.n).length,total=notes.reduce((sum,x)=>sum+(x.n?.best||0),0),ready=defs.length>0&&complete===defs.length;return{defs,notes,complete,total,ready,status:!ready?'Pendiente':total>=70?'Aprobado':'Reprobado'}}
+    function compSummaryForStudent(s,m){const periods=['P1','P2','P3','P4'],avgs={};periods.forEach(p=>{const vals=COMPETENCIAS.map(c=>effectiveComp(s.id,m.id,p,c)).filter(v=>v!=null);avgs[p]=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null});const vals=Object.values(avgs).filter(v=>v!=null);return{periods,avgs,overall:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null}}
+    function renderWorkspace(){
+      const m=materiaById($('workspaceMateria')?.value);if(!$('workspaceContent'))return;$('workspaceEmpty').classList.toggle('hidden',!!m);$('workspaceContent').classList.toggle('hidden',!m);if(!m)return;
+      const c=cursoById(m.cursoId),roster=studentsForCourse(m.cursoId),acts=actividades.filter(a=>String(resolveActivityMateria(a)?.id)===String(m.id)),isETP=workspaceIsETP(m),att=asistencias.filter(a=>String(a.courseId)===String(m.cursoId));
+      $('wsType').textContent=isETP?'Técnico Profesional · RA':'Artes / Académica · Competencias';$('wsTitle').textContent=materiaLabel(m);$('wsSubtitle').textContent=c?cursoLabel(c):'Sin grupo asociado';$('wsStudents').textContent=roster.length;$('wsActivities').textContent=acts.length;$('wsAttendance').textContent=att.length;$('wsConflicts').textContent=acts.filter(a=>isNoClassDate(a.date)).length;
+      if(isETP){const complete=roster.filter(s=>raSummaryForStudent(s,m).ready).length;$('wsProgressLabel').textContent='RA completos';$('wsProgress').textContent=roster.length?`${complete}/${roster.length}`:'—';$('wsEvaluationHint').textContent='Esquema ETP: C.R.A. + RP1 + RP2; se conserva el mejor resultado de cada RA.'}
+      else{const withScores=roster.map(s=>compSummaryForStudent(s,m).overall).filter(v=>v!=null);$('wsProgressLabel').textContent='Promedio registrado';$('wsProgress').textContent=withScores.length?(withScores.reduce((a,b)=>a+b,0)/withScores.length).toFixed(1):'—';$('wsEvaluationHint').textContent='Esquema de asignatura: competencias fundamentales por P1, P2, P3 y P4, con recuperación.'}
+      renderWorkspaceRoster();renderWorkspaceUpcoming();renderWorkspaceLogs();renderWorkspaceInstruments();
+    }
+    function renderWorkspaceRoster(){const m=materiaById($('workspaceMateria')?.value),head=$('wsRosterHead'),body=$('wsRosterBody');if(!m||!head||!body)return;const q=($('workspaceSearch').value||'').toLowerCase(),roster=studentsForCourse(m.cursoId).filter(s=>s.nombre.toLowerCase().includes(q)),isETP=workspaceIsETP(m);body.innerHTML='';
+      if(isETP){head.innerHTML='<tr><th>No.</th><th>Estudiante</th><th>Asistencia</th><th>RA</th><th>Total</th><th>Situación</th><th></th></tr>';roster.forEach((st,i)=>{const a=attendanceStatsForStudent(st.id),r=raSummaryForStudent(st,m);body.innerHTML+=`<tr><td>${esc(st.numero||i+1)}</td><td class="font-semibold">${esc(st.nombre)}</td><td>${a.pct==null?'—':a.pct.toFixed(1)+'%'}</td><td>${r.complete}/${r.defs.length}</td><td class="font-extrabold">${r.ready?r.total.toFixed(1):'—'}</td><td><span class="${r.status==='Aprobado'?'score-pass':r.status==='Reprobado'?'score-fail':'text-slate-500 font-bold'}">${r.status}</span></td><td><button class="text-indigo-600" onclick="openStudentReport(${JSON.stringify(st.id)},${JSON.stringify(m.id)})" title="Reporte"><i class="fa-solid fa-chart-column"></i></button></td></tr>`})}
+      else{head.innerHTML='<tr><th>No.</th><th>Estudiante</th><th>Asistencia</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>Prom.</th><th></th></tr>';roster.forEach((st,i)=>{const a=attendanceStatsForStudent(st.id),cs=compSummaryForStudent(st,m);body.innerHTML+=`<tr><td>${esc(st.numero||i+1)}</td><td class="font-semibold">${esc(st.nombre)}</td><td>${a.pct==null?'—':a.pct.toFixed(1)+'%'}</td>${cs.periods.map(p=>`<td>${cs.avgs[p]==null?'—':cs.avgs[p].toFixed(1)}</td>`).join('')}<td class="font-extrabold">${cs.overall==null?'—':cs.overall.toFixed(1)}</td><td><button class="text-indigo-600" onclick="openStudentReport(${JSON.stringify(st.id)},${JSON.stringify(m.id)})" title="Reporte"><i class="fa-solid fa-chart-column"></i></button></td></tr>`})}
+      if(!roster.length)body.innerHTML='<tr><td colspan="9" class="text-center text-slate-400">No hay estudiantes.</td></tr>';
+    }
+    function renderWorkspaceUpcoming(){const m=materiaById($('workspaceMateria')?.value),box=$('wsUpcoming');if(!m||!box)return;const today=todayIso(),acts=actividades.filter(a=>String(resolveActivityMateria(a)?.id)===String(m.id)).map(a=>({date:a.date,title:`${a.code||'Actividad'} · ${a.title}`,category:'actividad',raCode:a.raCode,conflict:isNoClassDate(a.date),module:true})),school=calendario.filter(e=>(e.end||e.start)>=today).map(e=>({date:e.start,title:e.title,category:e.category,official:e.official,noClass:e.noClass,module:false})),rows=[...acts,...school].filter(x=>x.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,10);box.innerHTML=rows.map(x=>`<div class="border rounded-lg p-3"><div class="flex justify-between gap-3"><strong class="text-sm">${esc(x.title)}</strong><span class="text-xs whitespace-nowrap">${esc(fmtDate(x.date))}</span></div><div class="mt-1">${x.module?(x.conflict?'<span class="warning-chip">No lectivo</span>':'<span class="ok-chip">Actividad del módulo</span>'):`<span class="cal-legend ${calendarClass(x.category)}">${x.official?'MINERD':'Centro'} · ${esc(x.category)}</span>`} ${x.raCode?`<span class="badge ml-1">${esc(x.raCode)}</span>`:''}</div></div>`).join('')||'<p class="text-xs text-slate-400">No hay actividades ni fechas próximas registradas.</p>'}
+    function renderWorkspaceLogs(){const m=materiaById($('workspaceMateria')?.value),box=$('wsLogs');if(!m||!box)return;const rows=bitacora.filter(l=>String(l.materiaId)===String(m.id)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);box.innerHTML=rows.map(l=>`<div class="border rounded-lg p-3"><div class="flex justify-between gap-3"><strong class="text-sm">${esc(l.topic)}</strong><span class="text-xs">${esc(fmtDate(l.date))}</span></div><p class="text-xs text-slate-500 mt-1">${esc(l.notes||'Sin observaciones')}</p></div>`).join('')||'<p class="text-xs text-slate-400">No hay entradas de bitácora para esta materia.</p>'}
+    function renderWorkspaceInstruments(){const m=materiaById($('workspaceMateria')?.value),box=$('wsInstruments');if(!m||!box)return;const rows=instrumentos.filter(i=>!i.materiaId||String(i.materiaId)===String(m.id));box.innerHTML=rows.map(i=>`<div class="border rounded-lg p-3"><div class="flex justify-between gap-3"><div><span class="badge">${esc(i.type)}</span><strong class="block text-sm mt-2">${esc(i.name)}</strong></div><strong>${i.total||'—'} pts</strong></div><p class="text-[11px] text-slate-500 mt-2">${i.materiaId?'Vinculado a esta materia':'Instrumento general reutilizable'} · ${(i.criteria||[]).length} criterios</p></div>`).join('')||'<p class="text-xs text-slate-400">No hay instrumentos disponibles.</p>'}
+    function workspaceGo(section){const m=materiaById($('workspaceMateria')?.value);if(!m)return;if(section==='asistencia'){showSection('asistencia');$('attCourse').value=String(m.cursoId);renderAttendance()}else if(section==='actividades'){showSection('actividades');$('filterActivityMateria').value=String(m.id);renderActivities()}else if(section==='evaluacion'){showSection('evaluacion');if(workspaceIsETP(m)){$('raFilterMateria').value=String(m.id);renderRAReport()}else{$('compFilterMateria').value=String(m.id);renderCompetencyMatrix()}}else if(section==='seguimiento'){showSection('seguimiento')}}
+    function openStudentReport(studentId,materiaId=null){const st=alumnoById(studentId);if(!st)return;const m=materiaById(materiaId||$('workspaceMateria')?.value);currentStudentReport={studentId:st.id,materiaId:m?.id||null};const c=cursoById(st.cursoId),a=attendanceStatsForStudent(st.id),courseMats=m?[m]:materias.filter(x=>String(x.cursoId)===String(st.cursoId));$('studentReportTitle').textContent=st.nombre;$('studentReportSubtitle').textContent=`${c?cursoLabel(c):'Sin grupo'}${m?' · '+materiaLabel(m):' · Reporte general'}`;const evalCards=courseMats.map(mat=>{if(workspaceIsETP(mat)){const r=raSummaryForStudent(st,mat);return `<div class="border rounded-lg p-3"><div class="flex justify-between gap-3"><strong class="text-sm">${esc(materiaLabel(mat))}</strong><span class="${r.status==='Aprobado'?'score-pass':r.status==='Reprobado'?'score-fail':'text-slate-500 font-bold'}">${r.status}</span></div><div class="flex flex-wrap gap-2 mt-2">${r.notes.map(x=>`<span class="badge">${esc(x.r.code)}: ${x.n?x.n.best:'—'}/${x.r.weight}</span>`).join('')}</div><p class="text-xs mt-2"><strong>Total:</strong> ${r.ready?r.total.toFixed(1):'Pendiente'}</p></div>`}const cs=compSummaryForStudent(st,mat);return `<div class="border rounded-lg p-3"><strong class="text-sm">${esc(materiaLabel(mat))}</strong><div class="grid grid-cols-4 gap-2 mt-2">${cs.periods.map(p=>`<div class="mini-stat"><span>${p}</span><strong>${cs.avgs[p]==null?'—':cs.avgs[p].toFixed(1)}</strong></div>`).join('')}</div><p class="text-xs mt-2"><strong>Promedio registrado:</strong> ${cs.overall==null?'—':cs.overall.toFixed(1)}</p></div>`}).join('')||'<p class="text-xs text-slate-400">No hay materias/módulos asociados al grupo.</p>';const conductRows=conducta.filter(x=>String(x.studentId)===String(st.id)).sort((x,y)=>y.date.localeCompare(x.date)).slice(0,5);$('studentReportContent').innerHTML=`<div class="grid grid-cols-2 md:grid-cols-5 gap-2"><div class="mini-stat"><span>P</span><strong>${a.P}</strong></div><div class="mini-stat"><span>A</span><strong>${a.A}</strong></div><div class="mini-stat"><span>T</span><strong>${a.T}</strong></div><div class="mini-stat"><span>E</span><strong>${a.E}</strong></div><div class="mini-stat"><span>Presencia registrada</span><strong>${a.pct==null?'—':a.pct.toFixed(1)+'%'}</strong></div></div><div class="border rounded-xl p-4"><h3 class="font-extrabold mb-3">Evaluación</h3><div class="space-y-3">${evalCards}</div></div><div class="border rounded-xl p-4"><h3 class="font-extrabold mb-3">Seguimiento reciente</h3>${conductRows.map(x=>`<div class="text-xs border-t py-2"><strong>${esc(fmtDate(x.date))} · ${esc(x.type)}</strong> (${x.points>0?'+':''}${x.points})<br><span class="text-slate-500">${esc(x.notes||'')}</span></div>`).join('')||'<p class="text-xs text-slate-400">Sin registros.</p>'}</div>`;$('studentReportModal').classList.remove('hidden')}
+    function closeStudentReport(){$('studentReportModal').classList.add('hidden')}
+    function exportCurrentStudentReport(){const st=alumnoById(currentStudentReport.studentId),selected=materiaById(currentStudentReport.materiaId);if(!st||typeof XLSX==='undefined')return;const wb=XLSX.utils.book_new(),c=cursoById(st.cursoId),a=attendanceStatsForStudent(st.id),mats=selected?[selected]:materias.filter(x=>String(x.cursoId)===String(st.cursoId));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{Estudiante:st.nombre,Numero:st.numero||'',Grupo:c?cursoLabel(c):'',P:a.P,A:a.A,T:a.T,E:a.E,Presencia:a.pct==null?'':a.pct.toFixed(1)+'%'}]),'Resumen');mats.forEach((mat,idx)=>{if(workspaceIsETP(mat)){const r=raSummaryForStudent(st,mat),rows=r.notes.map(x=>({Materia:materiaLabel(mat),RA:x.r.code,Peso:x.r.weight,Minimo:x.r.min,CRA:x.n?.cra??'',RP1:x.n?.rp1??'',RP2:x.n?.rp2??'',Mejor:x.n?.best??''}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),safeSheetName(`RA-${mat.codigo||idx+1}`))}else{const rows=competenciaNotas.filter(x=>String(x.studentId)===String(st.id)&&String(x.materiaId)===String(mat.id)).map(x=>({...x,Materia:materiaLabel(mat)}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),safeSheetName(`Comp-${idx+1}`))}});XLSX.writeFile(wb,`Reporte_${st.nombre.replace(/[^a-z0-9]+/gi,'_')}.xlsx`)}
+    function safeSheetName(name){return String(name||'Hoja').replace(/[\\\/?*\[\]:]/g,'-').slice(0,31)||'Hoja'}
+    function exportWorkspaceExcel(){const m=materiaById($('workspaceMateria')?.value);if(!m||typeof XLSX==='undefined'){toast('Selecciona una materia/módulo.','error');return}const c=cursoById(m.cursoId),students=studentsForCourse(m.cursoId),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(students.map(st=>{const a=attendanceStatsForStudent(st.id);return{Numero:st.numero||'',Estudiante:st.nombre,Grupo:c?cursoLabel(c):'',P:a.P,A:a.A,T:a.T,E:a.E,Presencia:a.pct==null?'':Number(a.pct.toFixed(1))}})),'Matricula-Asistencia');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(actividades.filter(a=>String(resolveActivityMateria(a)?.id)===String(m.id)).map(a=>({...a,ConflictoCalendario:isNoClassDate(a.date)?'Sí':'No'}))),'Actividades');if(workspaceIsETP(m)){XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(students.map(st=>{const r=raSummaryForStudent(st,m),row={Estudiante:st.nombre,Total:r.ready?Number(r.total.toFixed(1)):'',Situacion:r.status};r.notes.forEach(x=>row[x.r.code]=x.n?.best??'');return row})),'Resultados-RA')}else{XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(competenciaNotas.filter(n=>String(n.materiaId)===String(m.id)).map(n=>({...n,Estudiante:alumnoById(n.studentId)?.nombre||''}))),'Competencias')}XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(bitacora.filter(l=>String(l.materiaId)===String(m.id))),'Bitacora');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(instrumentos.filter(i=>!i.materiaId||String(i.materiaId)===String(m.id)).map(i=>({...i,criteria:JSON.stringify(i.criteria||[])}))),'Instrumentos');XLSX.writeFile(wb,`Ficha_${(m.codigo||m.nombre).replace(/[^a-z0-9]+/gi,'_')}_${$('schoolYear').value}.xlsx`)}
+
+    function auditIntegrity(){const issues=[],groupKeys=new Map();cursos.forEach(c=>{const k=normalizedName(`${c.modalidad}|${c.grado}|${c.especialidad}|${c.seccion}`);if(groupKeys.has(k))issues.push({level:'warn',text:`Grupo duplicado: ${cursoLabel(c)}`});else groupKeys.set(k,c.id)});alumnos.forEach(a=>{if(!cursoById(a.cursoId))issues.push({level:'error',text:`Estudiante sin grupo válido: ${a.nombre}`})});materias.forEach(m=>{if(!cursoById(m.cursoId))issues.push({level:'error',text:`Materia/módulo sin grupo válido: ${materiaLabel(m)}`})});cursos.forEach(c=>{const ss=studentsForCourse(c.id),names=new Map(),nums=new Map();ss.forEach(a=>{const nk=normalizedName(a.nombre);if(names.has(nk))issues.push({level:'warn',text:`Nombre duplicado en ${c.grado} ${c.seccion}: ${a.nombre}`});else names.set(nk,a.id);if(a.numero){const no=String(a.numero).trim();if(nums.has(no))issues.push({level:'warn',text:`Número de lista ${no} repetido en ${c.grado} ${c.seccion}`});else nums.set(no,a.id)}})});materias.filter(m=>m.tipo==='Módulo Formativo'&&m.codigo).forEach(m=>{const defs=ras.filter(r=>r.moduleCode===m.codigo);if(defs.length){const sum=defs.reduce((a,r)=>a+Number(r.weight||0),0);if(Math.abs(sum-100)>.01)issues.push({level:'warn',text:`${m.codigo}: los RA suman ${sum} puntos, no 100.`})}});actividades.forEach(a=>{if(!resolveActivityMateria(a))issues.push({level:'warn',text:`Actividad sin materia/módulo asignado: ${a.code||''} ${a.title}`});if(a.date&&isNoClassDate(a.date))issues.push({level:'warn',text:`Actividad en fecha no lectiva: ${a.code||''} · ${fmtDate(a.date)}`})});raNotas.forEach(n=>{if(!alumnoById(n.studentId)||!materiaById(n.materiaId))issues.push({level:'error',text:'Existe una calificación RA con estudiante o módulo eliminado.'})});competenciaNotas.forEach(n=>{if(!alumnoById(n.studentId)||!materiaById(n.materiaId))issues.push({level:'error',text:'Existe una calificación por competencia con estudiante o asignatura eliminada.'})});return issues}
+    function renderIntegrityAudit(){if(!$('integrityIssues'))return;const issues=auditIntegrity();$('integrityCount').textContent=`${issues.length} alertas`;if(!issues.length){$('integrityIssues').innerHTML='<div class="audit-ok md:col-span-2"><i class="fa-solid fa-circle-check mr-2"></i>No se detectaron inconsistencias estructurales.</div>';return}$('integrityIssues').innerHTML=issues.slice(0,12).map(i=>`<div class="${i.level==='error'?'audit-error':'audit-warn'}"><i class="fa-solid ${i.level==='error'?'fa-circle-exclamation':'fa-triangle-exclamation'} mr-2"></i>${esc(i.text)}</div>`).join('')+(issues.length>12?`<div class="audit-warn">+ ${issues.length-12} alertas adicionales. Corrige los registros desde las secciones correspondientes.</div>`:'')}
+
+    // -------- Dashboard --------
+    function renderDashboardCards(){$('card-estudiantes-count').textContent=alumnos.length;$('card-modalidades-count').textContent=new Set(cursos.map(c=>c.modalidad)).size;$('card-secciones-count').textContent=cursos.length;$('card-materias-count').textContent=materias.length;$('card-evaluaciones-count').textContent=raNotas.length+competenciaNotas.length+evaluaciones.length}
+    function renderDashboard(){
+      renderDashboardCards();renderIntegrityAudit();
+      if($('sourceConflictCount'))$('sourceConflictCount').textContent=actividades.filter(a=>a.seeded&&isNoClassDate(a.date)).length;
+      if(typeof Chart==='undefined')return;
+      const counts={};cursos.forEach(c=>counts[cursoLabel(c)]=0);alumnos.forEach(a=>{const c=cursoById(a.cursoId);if(c)counts[cursoLabel(c)]=(counts[cursoLabel(c)]||0)+1});
+      const ctx=$('chartMatricula').getContext('2d');if(chartMatricula)chartMatricula.destroy();chartMatricula=new Chart(ctx,{type:'bar',data:{labels:Object.keys(counts).length?Object.keys(counts):['Sin grupos'],datasets:[{label:'Estudiantes',data:Object.values(counts).length?Object.values(counts):[0],backgroundColor:'#6366f1',borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}});
+      const byMod={};materias.forEach(m=>{const c=cursoById(m.cursoId),key=c?.modalidad||'Sin modalidad';byMod[key]=(byMod[key]||0)+1});const ctx2=$('chartMaterias').getContext('2d');if(chartMaterias)chartMaterias.destroy();chartMaterias=new Chart(ctx2,{type:'doughnut',data:{labels:Object.keys(byMod).length?Object.keys(byMod):['Sin materias'],datasets:[{data:Object.values(byMod).length?Object.values(byMod):[1],backgroundColor:['#6366f1','#a855f7','#10b981','#f59e0b']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+    }
+
+    // -------- Backup / Excel --------
+    function getBackupPayload(){return{app:'AulaGestión RD',version:APP_VERSION,schoolYear:$('schoolYear').value,cursos,materias,alumnos,evaluaciones,ras,raNotas,competenciaNotas,actividades,asistencias,bitacora,conducta,instrumentos,calendario,cloudMeta:{exportedAt:nowIso()}}}
+    function validateBackup(p){return p&&p.app==='AulaGestión RD'&&Array.isArray(p.cursos)&&Array.isArray(p.materias)&&Array.isArray(p.alumnos)}
+    function backupJSON(){const p=getBackupPayload(),blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`AulaGestion_RD_backup_${$('schoolYear').value}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+    async function importBackupPayload(p,{fromCloud=false}={}){
+      if(!validateBackup(p))throw new Error('El archivo no parece ser un respaldo válido de AulaGestión RD.');
+      const fallback={ras:RA_DEFAULTS,actividades:LEGACY_ACTIVITIES,instrumentos:INSTRUMENT_DEFAULTS,calendario:OFFICIAL_CALENDAR};
+      await Promise.all(STORES.map(name=>{
+        const incoming=Array.isArray(p[name])?p[name]:(fallback[name]||[]);
+        return dbReplaceStore(name,incoming);
+      }));
+      if(p.schoolYear)await dbSetMeta('schoolYear',p.schoolYear);
+      await dbSetMeta('migratedV4',true);
+      await loadState();renderAll();if(!fromCloud)await markDirty();toast('Respaldo restaurado correctamente.','success');
+    }
+    async function restoreFromFile(e){const f=e.target.files?.[0];if(!f)return;try{const p=JSON.parse(await f.text());if(!confirm('Esto reemplazará los datos actuales por los del respaldo. ¿Continuar?'))return;await importBackupPayload(p)}catch(err){toast(err.message||'No se pudo importar el respaldo.','error')}finally{e.target.value=''}}
+    function exportExcel(){
+      if(typeof XLSX==='undefined'){toast('La librería de Excel no está disponible sin conexión. Usa Backup JSON.','error');return}
+      const wb=XLSX.utils.book_new(),add=(name,data)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(data),name.slice(0,31));
+      add('Grupos',cursos);add('Materias-Modulos',materias.map(m=>({...m,grupo:cursoById(m.cursoId)?cursoLabel(cursoById(m.cursoId)):'Sin grupo'})));add('Estudiantes',alumnos.map(a=>({...a,grupo:cursoById(a.cursoId)?cursoLabel(cursoById(a.cursoId)):'Sin grupo'})));
+      add('RA Config',ras);add('RA Calificaciones',raNotas.map(n=>({...n,estudiante:alumnoById(n.studentId)?.nombre||'',modulo:materiaById(n.materiaId)?.nombre||''})));add('Competencias',competenciaNotas.map(n=>({...n,estudiante:alumnoById(n.studentId)?.nombre||'',asignatura:materiaById(n.materiaId)?.nombre||''})));
+      add('Actividades',actividades);add('Asistencia',asistencias.map(a=>({...a,estudiante:alumnoById(a.studentId)?.nombre||''})));add('Bitacora',bitacora);add('Conducta',conducta.map(c=>({...c,estudiante:alumnoById(c.studentId)?.nombre||''})));add('Calendario',calendario);add('Instrumentos',instrumentos.map(i=>({...i,criteria:JSON.stringify(i.criteria||[])})));
+      XLSX.writeFile(wb,`AulaGestion_RD_${$('schoolYear').value}.xlsx`);
+    }
+
+    // -------- Nube --------
+    async function saveCloudSettings(){cloudSettings={googleClientId:$('googleClientId').value.trim()||GOOGLE_CLIENT_ID,microsoftClientId:$('microsoftClientId').value.trim(),preferredProvider:$('preferredProvider').value,autoSync:$('autoSync').checked};await dbSetMeta('cloudSettings',cloudSettings);updateCloudUI();toast('Preferencias guardadas.','success')}
+    async function chooseProvider(provider){$('preferredProvider').value=provider;await saveCloudSettings()}
+    function getRedirectUri(){if(location.protocol==='file:')return 'Publica la app por HTTPS para obtener una URI válida';return location.origin+location.pathname}
+    function requireWebOrigin(){if(location.protocol==='file:'){toast('La nube requiere HTTPS o localhost. La gestión local sí funciona desde este archivo.','error');return false}if(!navigator.onLine){toast('No hay conexión a Internet.','error');return false}return true}
+    function googleTokenValid(){return googleAccessToken&&Date.now()<googleTokenExpiresAt-60000}
+    function setAuthStatus(message,type=''){const box=$('authGateStatus');if(!box)return;box.className='auth-status'+(type?' '+type:'');box.innerHTML=`<i class="fa-solid ${type==='error'?'fa-circle-exclamation':type==='success'?'fa-circle-check':'fa-shield-halved'}"></i><span>${esc(message)}</span>`}
+    async function waitForGoogleIdentity(timeout=9000){const start=Date.now();while(Date.now()-start<timeout){if(window.google?.accounts?.oauth2)return true;await new Promise(r=>setTimeout(r,120))}return false}
+    async function sha256Hex(text){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+    function persistGoogleSession(){if(googleAccessToken)sessionStorage.setItem('aulagestion_google_access_token',googleAccessToken);sessionStorage.setItem('aulagestion_google_expires_at',String(googleTokenExpiresAt||0));if(authUser)sessionStorage.setItem('aulagestion_auth_profile',JSON.stringify(authUser))}
+    function clearGoogleSession(){['aulagestion_google_access_token','aulagestion_google_expires_at','aulagestion_auth_profile'].forEach(k=>sessionStorage.removeItem(k));googleAccessToken=null;googleTokenExpiresAt=0;authUser=null}
+    async function fetchGoogleProfile(token=googleAccessToken){const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+token},cache:'no-store'});if(!r.ok)throw new Error('No se pudo verificar la identidad Google.');return r.json()}
+    async function validateAuthorizedProfile(profile){if(!profile?.email||profile.email_verified===false)throw new Error('Google no devolvió un correo verificado.');const hash=await sha256Hex(String(profile.email).trim().toLowerCase()),rule=AUTHORIZED_USERS.get(hash);if(!rule)throw new Error('Esta cuenta Google no está autorizada para usar AulaGestión RD.');return{email:profile.email,name:profile.name||profile.email,picture:profile.picture||'',sub:profile.sub||'',role:rule.role}}
+    async function acceptGoogleToken(response,{unlock=true,after=null}={}){if(response?.error)throw new Error(response.error_description||response.error);googleAccessToken=response.access_token;googleTokenExpiresAt=Date.now()+Number(response.expires_in||3600)*1000;const profile=await fetchGoogleProfile(googleAccessToken);authUser=await validateAuthorizedProfile(profile);persistGoogleSession();if(unlock)await unlockApplication();if(after)await after();return true}
+    async function requestGoogleAccess({prompt='select_account',unlock=true,after=null}={}){
+      if(authAttemptInFlight)return false;
+      if(!requireWebOrigin())return false;
+      const ready=await waitForGoogleIdentity();
+      if(!ready){setAuthStatus('Google Identity Services no pudo cargarse. Revisa tu conexión.','error');return false}
+      authAttemptInFlight=true;
+      return new Promise(resolve=>{
+        let settled=false;
+        const done=v=>{if(!settled){settled=true;authAttemptInFlight=false;resolve(v)}};
+        googleTokenClient=google.accounts.oauth2.initTokenClient({
+          client_id:GOOGLE_CLIENT_ID,
+          scope:GOOGLE_SCOPES,
+          callback:async r=>{
+            try{
+              await acceptGoogleToken(r,{unlock,after});
+              done(true);
+            }catch(e){
+              if(googleAccessToken&&window.google?.accounts?.oauth2){try{google.accounts.oauth2.revoke(googleAccessToken,()=>{})}catch{}}
+              clearGoogleSession();
+              setAuthStatus(e.message,'error');
+              done(false);
+            }
+          }
+        });
+        try{googleTokenClient.requestAccessToken({prompt})}
+        catch(e){setAuthStatus(e.message||'No se pudo abrir el inicio de sesión.','error');done(false)}
+        setTimeout(()=>done(false),15000);
+      });
+    }
+    async function startGoogleLogin(){setAuthStatus('Abriendo Google para validar tu cuenta…');await requestGoogleAccess({prompt:'select_account',unlock:true})}
+    async function tryRestoreGoogleSession(){if(googleTokenValid()){try{const profile=await fetchGoogleProfile();authUser=await validateAuthorizedProfile(profile);persistGoogleSession();return true}catch{clearGoogleSession()}}setAuthStatus('Buscando una sesión Google autorizada…');const ok=await requestGoogleAccess({prompt:'',unlock:false});return !!ok}
+    function updateAuthUI(){const u=authUser;if($('authUserChip')){$('authUserChip').classList.toggle('hidden',!u);$('authUserChip').classList.toggle('flex',!!u)}[['authUserName',u?.name],['authUserRole',u?.role],['securityName',u?.name],['securityEmail',u?.email],['securityRole',u?.role]].forEach(([id,val])=>{if($(id))$(id).textContent=val||'—'});['authUserAvatar','securityAvatar'].forEach(id=>{if($(id)){if(u?.picture){$(id).src=u.picture;$(id).classList.remove('hidden')}else{$(id).removeAttribute('src')}}})}
+    function showAuthGate(message='Inicia sesión para continuar.',type=''){if($('authGate'))$('authGate').classList.remove('hidden');document.body.style.overflow='hidden';setAuthStatus(message,type);const b=$('googleLoginButton');if(b)b.disabled=!window.google?.accounts?.oauth2}
+    function hideAuthGate(){if($('authGate'))$('authGate').classList.add('hidden');document.body.style.overflow=''}
+    function resetAuthIdle(){if(!authUser)return;clearTimeout(authIdleTimer);authIdleTimer=setTimeout(()=>lockApplication(true),AUTH_IDLE_MS)}
+    function setupAuthIdle(){['pointerdown','keydown','touchstart','scroll'].forEach(ev=>window.addEventListener(ev,resetAuthIdle,{passive:true}));resetAuthIdle()}
+    async function unlockApplication(){hideAuthGate();updateAuthUI();setupAuthIdle();if(!appInitialized){await initApp();appInitialized=true}else{renderAll();updateAuthUI()}setAuthStatus('Acceso autorizado.','success')}
+    async function lockApplication(auto=false){clearTimeout(authIdleTimer);clearGoogleSession();updateAuthUI();showAuthGate(auto?'Sesión bloqueada por 30 minutos de inactividad. Inicia sesión nuevamente.':'AulaGestión está bloqueada. Inicia sesión para continuar.');const b=$('googleLoginButton');if(b)b.disabled=false}
+    async function signOutGoogle(){const token=googleAccessToken;clearTimeout(authIdleTimer);clearGoogleSession();if(token&&window.google?.accounts?.oauth2){try{google.accounts.oauth2.revoke(token,()=>{})}catch{}}updateAuthUI();showAuthGate('Sesión cerrada. Tus datos locales permanecen en este dispositivo.');const b=$('googleLoginButton');if(b)b.disabled=false}
+    function connectGoogle(){if(googleTokenValid()&&authUser){toast('Google Drive ya está conectado con tu sesión autorizada.','success');return}requestGoogleAccess({prompt:'consent',unlock:true})}
+    function requestGoogleTokenThen(fn){if(googleTokenValid()&&authUser)return fn();requestGoogleAccess({prompt:'',unlock:true,after:fn})}
+    async function googleFetch(url,options={}){const headers=new Headers(options.headers||{});headers.set('Authorization','Bearer '+googleAccessToken);const r=await fetch(url,{...options,headers});if(!r.ok){const t=await r.text();throw new Error(`Google Drive (${r.status}): ${t.slice(0,200)}`)}return r}
+    async function googleFindBackup(){const q=encodeURIComponent(`name='${CLOUD_FILE.replace(/'/g,"\'")}' and trashed=false`);const r=await googleFetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id,name,modifiedTime)&pageSize=10`);const j=await r.json();return j.files?.[0]||null}
+    async function googleSync(){try{toast('Respaldando en Google Drive...');const data=JSON.stringify(getBackupPayload()),existing=await googleFindBackup();if(existing){await googleFetch(`https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:data})}else{const boundary='-------AulaGestion'+Date.now(),meta={name:CLOUD_FILE,parents:['appDataFolder']},body=`--${boundary}
+Content-Type: application/json; charset=UTF-8
+
+${JSON.stringify(meta)}
+--${boundary}
+Content-Type: application/json
+
+${data}
+--${boundary}--`;await googleFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime',{method:'POST',headers:{'Content-Type':`multipart/related; boundary=${boundary}`},body})}await markSynced('google');toast('Respaldo guardado en Google Drive.','success')}catch(err){updateCloudUI(err.message);toast(err.message,'error')}}
+    function googleSyncRequested(){requestGoogleTokenThen(googleSync)}
+    async function googleRestore(){try{const f=await googleFindBackup();if(!f)throw new Error('No existe todavía un respaldo en Google Drive.');if(!confirm(`Se restaurará la copia de Google Drive (${fmtDate(f.modifiedTime)}). ¿Continuar?`))return;const r=await googleFetch(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`),p=await r.json();await importBackupPayload(p,{fromCloud:true});await markSynced('google')}catch(err){updateCloudUI(err.message);toast(err.message,'error')}}
+    function googleRestoreRequested(){requestGoogleTokenThen(googleRestore)}
+
+    function msTokenValid(){return msAccessToken&&Date.now()<msTokenExpiresAt-60000}
+    function base64url(bytes){return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+    function randomString(bytes=48){const a=new Uint8Array(bytes);crypto.getRandomValues(a);return base64url(a)}
+    async function sha256b64url(text){return base64url(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)))}
+    async function microsoftConnectRequested(action='connect'){
+      if(action==='sync'&&msTokenValid())return microsoftSync();if(action==='restore'&&msTokenValid())return microsoftRestore();if(action==='connect'&&msTokenValid()){toast('Microsoft ya está conectado.','success');return}
+      if(!requireWebOrigin())return;await saveCloudSettings();const clientId=$('microsoftClientId').value.trim();if(!clientId){toast('Introduce primero el Microsoft Entra Client ID.','error');return}
+      const verifier=randomString(64),challenge=await sha256b64url(verifier),state=randomString(24),redirect=getRedirectUri();sessionStorage.setItem('aulagestion_ms_pkce_verifier',verifier);sessionStorage.setItem('aulagestion_ms_state',state);sessionStorage.setItem('aulagestion_ms_action',action);
+      const p=new URLSearchParams({client_id:clientId,response_type:'code',redirect_uri:redirect,response_mode:'query',scope:'openid profile offline_access Files.ReadWrite.AppFolder',state,code_challenge:challenge,code_challenge_method:'S256',prompt:'select_account'});location.assign('https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'+p.toString());
+    }
+    async function handleMicrosoftCallback(){
+      const u=new URL(location.href),code=u.searchParams.get('code'),err=u.searchParams.get('error');if(!code&&!err)return;if(err){const desc=u.searchParams.get('error_description')||err;history.replaceState({},'',getRedirectUri());updateCloudUI(desc);toast(desc,'error');return}
+      try{const state=u.searchParams.get('state'),expected=sessionStorage.getItem('aulagestion_ms_state');if(!expected||state!==expected)throw new Error('La validación state de Microsoft no coincide.');const verifier=sessionStorage.getItem('aulagestion_ms_pkce_verifier'),clientId=cloudSettings.microsoftClientId||$('microsoftClientId').value.trim(),redirect=getRedirectUri();if(!clientId||!verifier)throw new Error('Falta la configuración temporal de Microsoft.');const body=new URLSearchParams({client_id:clientId,scope:'openid profile offline_access Files.ReadWrite.AppFolder',code,redirect_uri:redirect,grant_type:'authorization_code',code_verifier:verifier}),r=await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body}),j=await r.json();if(!r.ok)throw new Error(j.error_description||j.error||'No se pudo obtener el token.');setMicrosoftTokens(j);history.replaceState({},'',redirect);const action=sessionStorage.getItem('aulagestion_ms_action')||'connect';['aulagestion_ms_pkce_verifier','aulagestion_ms_state','aulagestion_ms_action'].forEach(k=>sessionStorage.removeItem(k));toast('Microsoft OneDrive conectado.','success');if(action==='sync')await microsoftSync();else if(action==='restore')await microsoftRestore()}catch(e){history.replaceState({},'',getRedirectUri());updateCloudUI(e.message);toast(e.message,'error')}
+    }
+    function setMicrosoftTokens(j){msAccessToken=j.access_token;msRefreshToken=j.refresh_token||msRefreshToken;msTokenExpiresAt=Date.now()+Number(j.expires_in||3600)*1000;sessionStorage.setItem('aulagestion_ms_access_token',msAccessToken||'');if(msRefreshToken)sessionStorage.setItem('aulagestion_ms_refresh_token',msRefreshToken);sessionStorage.setItem('aulagestion_ms_expires_at',String(msTokenExpiresAt))}
+    async function msEnsureToken(){if(msTokenValid())return true;if(!msRefreshToken)return false;const clientId=cloudSettings.microsoftClientId;if(!clientId)return false;const body=new URLSearchParams({client_id:clientId,scope:'openid profile offline_access Files.ReadWrite.AppFolder',refresh_token:msRefreshToken,grant_type:'refresh_token'}),r=await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body}),j=await r.json();if(!r.ok){disconnectMicrosoftTokens();return false}setMicrosoftTokens(j);return true}
+    function disconnectMicrosoftTokens(){msAccessToken=null;msRefreshToken=null;msTokenExpiresAt=0;['aulagestion_ms_access_token','aulagestion_ms_refresh_token','aulagestion_ms_expires_at'].forEach(k=>sessionStorage.removeItem(k))}
+    async function msFetch(url,options={}){if(!await msEnsureToken())throw new Error('La sesión de Microsoft expiró.');const headers=new Headers(options.headers||{});headers.set('Authorization','Bearer '+msAccessToken);const r=await fetch(url,{...options,headers});if(!r.ok){const t=await r.text();throw new Error(`OneDrive (${r.status}): ${t.slice(0,220)}`)}return r}
+    async function microsoftSync(){try{toast('Respaldando en OneDrive...');const data=JSON.stringify(getBackupPayload());await msFetch(`https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURIComponent(CLOUD_FILE)}:/content`,{method:'PUT',headers:{'Content-Type':'application/json'},body:data});await markSynced('microsoft');toast('Respaldo guardado en OneDrive.','success')}catch(err){updateCloudUI(err.message);toast(err.message,'error')}}
+    async function microsoftRestore(){try{if(!confirm('Se reemplazarán los datos locales por la copia de OneDrive. ¿Continuar?'))return;const r=await msFetch(`https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURIComponent(CLOUD_FILE)}:/content`),p=await r.json();await importBackupPayload(p,{fromCloud:true});await markSynced('microsoft')}catch(err){updateCloudUI(err.message);toast(err.message,'error')}}
+    async function syncPreferredCloud(){const p=$('preferredProvider').value;if(p==='google')googleSyncRequested();else if(p==='microsoft')microsoftConnectRequested('sync');else toast('Selecciona Google Drive o OneDrive como proveedor principal.','error')}
+    async function restorePreferredCloud(){const p=$('preferredProvider').value;if(p==='google')googleRestoreRequested();else if(p==='microsoft')microsoftConnectRequested('restore');else toast('Selecciona un proveedor primero.','error')}
+    async function autoSyncIfPossible(){if(!navigator.onLine||!cloudState.dirty)return;const p=cloudSettings.preferredProvider;if(p==='google'&&googleTokenValid())await googleSync();else if(p==='microsoft'&&(msTokenValid()||msRefreshToken))await microsoftSync()}
+    function disconnectCloud(){disconnectMicrosoftTokens();toast('OneDrive fue desconectado. Google Drive comparte la sesión segura de acceso de AulaGestión; usa “Cerrar sesión” en Seguridad para desconectarlo.','success');updateCloudUI()}
+    async function copyRedirectUri(){try{await navigator.clipboard.writeText($('microsoftRedirectUri').value);toast('URI copiada.','success')}catch{toast('No se pudo copiar automáticamente.','error')}}
+
+    function renderAll(){renderCursos();renderMaterias();renderStudents();refreshSelectors();renderWorkspace();renderCalendar();renderAttendance();renderActivities();renderRAReport();renderCompetencyMatrix();renderRAConfig();renderSeguimiento();renderDashboard();updateCloudUI()}
+    function setupConnectivity(){window.addEventListener('online',()=>{updateCloudUI();if(cloudSettings.autoSync)autoSyncIfPossible()});window.addEventListener('offline',()=>updateCloudUI())}
+    function setupPWA(){if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+    async function initApp(){try{await openDB();await migrateOrSeed();await loadState();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});await handleMicrosoftCallback();renderAll();setupConnectivity();setupPWA();updateAuthUI()}catch(e){console.error(e);toast('No se pudo iniciar la base local: '+e.message,'error')}}
+    async function bootAuth(){showAuthGate('Preparando el inicio de sesión…');const ready=await waitForGoogleIdentity();const b=$('googleLoginButton');if(b)b.disabled=!ready;if(!ready){setAuthStatus('No se pudo cargar Google Identity Services. Revisa tu conexión y recarga.','error');return}const restored=await tryRestoreGoogleSession();if(restored)await unlockApplication();else{showAuthGate('Inicia sesión con una cuenta Google autorizada para continuar.');if(b)b.disabled=false}}
+    bootAuth();
+  </script>
+
 </body>
 </html>
