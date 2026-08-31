@@ -1,0 +1,85 @@
+name: Publicar AulaGestion RD V6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/aulagestion-v6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-v6:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruir V5 exacta y aplicar acceso privado V6
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib, json, re, subprocess
+
+          root=Path('aulagestion-rd')
+          files=['app/pair0.txt','app/pair1.txt','app/pair2.txt','app/c06.txt','app/c07.txt','app/c08.txt','app/c09.txt','app/c10.txt','app/c11.txt','app/c12.txt','app/c13.txt']
+          b64=''.join((root/f).read_text(encoding='utf-8').strip() for f in files)
+          assert len(b64)==53288, f'Paquete V5 incompleto: {len(b64)}'
+          v5=gzip.decompress(base64.b64decode(b64))
+          assert len(v5)==181377, f'Tamaño V5 inesperado: {len(v5)}'
+          assert hashlib.sha256(v5).hexdigest()=='7137671dd039b964a66e5154cfb0723a161c4b67f23ffba8e48c9490b6e0bc31'
+          (root/'index.html').write_bytes(v5)
+
+          patch_b64=Path('.github/aulagestion-v6.patch.gz.b64').read_text(encoding='utf-8').strip()
+          patch=gzip.decompress(base64.b64decode(patch_b64))
+          Path('/tmp/aulagestion-v6.patch').write_bytes(patch)
+          subprocess.run(['git','apply','/tmp/aulagestion-v6.patch'],check=True)
+
+          v6=(root/'index.html').read_bytes()
+          assert len(v6)==195055, f'Tamaño V6 inesperado: {len(v6)}'
+          assert hashlib.sha256(v6).hexdigest()=='ca8bbd1743fc3297d4eb1099d2863756b7a571bacf54f33ac54e644454935065'
+
+          text=v6.decode('utf-8')
+          scripts=re.findall(r'<script(?: [^>]*)?>([\\s\\S]*?)</script>',text)
+          inline=[x for x in scripts if x.strip()]
+          assert inline, 'No se encontró JavaScript interno'
+          Path('/tmp/aulagestion-inline.js').write_text(inline[-1],encoding='utf-8')
+
+          manifest_path=root/'manifest.webmanifest'
+          manifest=json.loads(manifest_path.read_text(encoding='utf-8')) if manifest_path.exists() else {}
+          manifest.update({
+            'name':'AulaGestión RD V6',
+            'short_name':'AulaGestión',
+            'description':'Gestión docente local-first con acceso privado mediante Google.',
+            'start_url':'./index.html','scope':'./','display':'standalone',
+            'background_color':'#f1f5f9','theme_color':'#4f46e5','lang':'es-DO',
+            'icons':[{'src':'./icon.svg','sizes':'any','type':'image/svg+xml','purpose':'any maskable'}]
+          })
+          manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
+
+          sw="""const CACHE='aulagestion-rd-v6-auth-20260831';
+          const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
+          const REMOTE=['https://cdn.tailwindcss.com','https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css','https://cdn.jsdelivr.net/npm/chart.js','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'];
+          self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(async c=>{await c.addAll(CORE);await Promise.allSettled(REMOTE.map(url=>c.add(url)));}).then(()=>self.skipWaiting()));});
+          self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
+          self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;if(event.request.mode==='navigate'){event.respondWith(fetch(event.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));return r;}).catch(()=>caches.match('./index.html')));return;}event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(r=>{if(r.ok||r.type==='opaque'){const copy=r.clone();caches.open(CACHE).then(c=>c.put(event.request,copy));}return r;}).catch(()=>cached)));});
+          """
+          (root/'sw.js').write_text(sw,encoding='utf-8')
+          PY
+
+          node --check /tmp/aulagestion-inline.js
+          rm -rf aulagestion-rd/app aulagestion-rd/parts aulagestion-rd/payload
+
+      - name: Publicar V6 en main
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Publicar AulaGestion RD V6 con acceso privado [skip ci]'
+          git push origin main
