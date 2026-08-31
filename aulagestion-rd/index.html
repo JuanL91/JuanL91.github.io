@@ -4,14 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#4f46e5">
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <title>AulaGestión RD</title>
   <style>
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f172a;display:grid;place-items:center;min-height:100vh}
     .box{max-width:520px;margin:24px;padding:28px;background:#fff;border:1px solid #e2e8f0;border-radius:18px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}
     .spinner{width:36px;height:36px;border:4px solid #e2e8f0;border-top-color:#4f46e5;border-radius:50%;margin:0 auto 16px;animation:s .8s linear infinite}
-    @keyframes s{to{transform:rotate(360deg)}} p{font-size:14px;color:#64748b;line-height:1.5}.err{color:#b91c1c}.small{font-size:12px;color:#94a3b8}
+    @keyframes s{to{transform:rotate(360deg)}}
+    p{font-size:14px;color:#64748b;line-height:1.5}.err{color:#b91c1c}.small{font-size:12px;color:#94a3b8}
   </style>
 </head>
 <body>
@@ -24,19 +23,24 @@
       const texts=[];
       for(let i=0;i<parts.length;i++){
         status.textContent=`Cargando componente ${i+1} de ${parts.length}…`;
-        const r=await fetch(parts[i],{cache:'no-store'});
+        const r=await fetch(parts[i]+'?v=20260831b',{cache:'no-store'});
         if(!r.ok) throw new Error(`No se pudo cargar ${parts[i]} (${r.status}).`);
-        texts.push((await r.text()).replace(/\s+/g,''));
+        texts.push(await r.text());
       }
-      const joined=texts.join('');
-      const bin=atob(joined);
+      status.textContent='Verificando y reconstruyendo la aplicación…';
+      const b64=texts.join('').replace(/\s+/g,'');
+      if(!/^[A-Za-z0-9+/]*={0,2}$/.test(b64)) throw new Error('Los componentes descargados contienen caracteres no válidos.');
+      const bin=atob(b64);
       const bytes=new Uint8Array(bin.length);
       for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
       const html=new TextDecoder('utf-8').decode(bytes);
-      if(!/^\s*<!DOCTYPE html>/i.test(html)||!/<\/html>\s*$/i.test(html)) throw new Error('La copia publicada está incompleta.');
+      if(!html.startsWith('<!DOCTYPE html>')&&!html.startsWith('<!doctype html>')) throw new Error('La reconstrucción no produjo un documento HTML válido.');
+      if(!html.includes('AulaGestión RD')||!html.includes('IndexedDB')) throw new Error('La aplicación reconstruida está incompleta.');
       document.open();document.write(html);document.close();
     }catch(e){
-      document.querySelector('.spinner')?.remove();status.className='err';status.textContent='No se pudo cargar AulaGestión. '+e.message;
+      document.querySelector('.spinner')?.remove();
+      status.className='err';
+      status.textContent='No se pudo cargar AulaGestión. '+e.message;
     }
   })();
   </script>
