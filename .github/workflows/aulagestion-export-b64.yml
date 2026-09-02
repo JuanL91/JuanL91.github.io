@@ -1,0 +1,34 @@
+name: Preparar transferencia ZIP AulaGestion V8
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/aulagestion-export-b64.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Convertir ZIP a Base64 temporal
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          p=Path('downloads/AulaGestion_RD_V8_Compartir.zip')
+          assert p.exists()
+          Path('downloads/AulaGestion_RD_V8_Compartir.zip.b64').write_text(base64.b64encode(p.read_bytes()).decode('ascii'),encoding='utf-8')
+          PY
+      - name: Publicar representación temporal
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add downloads/AulaGestion_RD_V8_Compartir.zip.b64
+          git commit -m 'Agregar Base64 temporal del paquete V8 [skip ci]'
+          git push origin main
