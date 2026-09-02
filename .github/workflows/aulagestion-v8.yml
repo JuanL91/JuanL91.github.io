@@ -1,0 +1,95 @@
+name: Publicar AulaGestion RD V8
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/aulagestion-v8/**'
+      - '.github/workflows/aulagestion-v8.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-v8:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruir y validar mejora V8
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib
+
+          base=Path('.github/aulagestion-v8')
+          parts=[base/'part00.b64',base/'part01.b64',base/'part02.b64',base/'part03.b64']
+          expected_parts=[
+            (5000,'c709fc1e139058d65f32d2c55e1b0f1e9a7ea9c36833ccb5ef1680b6a2c5923f'),
+            (5000,'50ff63f8cf042654588cc1cc85d4716b2225d4299c929e5e29fae8a89bd8613a'),
+            (5000,'7cfeed570524e5e9caebd88cd3969490e606622bd0537c255a38e5eba681b8ef'),
+            (1916,'c9dbbc5bbde1d0f1f6098ae5ce2b33259c56ffe46a5a129a7b3c0c9c4a759344'),
+          ]
+          chunks=[]
+          for p,(expected_len,expected_sha) in zip(parts,expected_parts):
+            s=p.read_text(encoding='utf-8').strip()
+            assert len(s)==expected_len, f'{p.name}: longitud {len(s)}/{expected_len}'
+            assert hashlib.sha256(s.encode()).hexdigest()==expected_sha, f'{p.name}: SHA256 no coincide'
+            chunks.append(s)
+          b64=''.join(chunks)
+          assert len(b64)==16916, f'Base64 V8 incompleto: {len(b64)}/16916'
+          assert hashlib.sha256(b64.encode()).hexdigest()=='f38c8acead98f9791b8211464e43dd93f6eb876be68fd55c937073d85d9542e9'
+          raw=base64.b64decode(b64)
+          assert len(raw)==12685, f'Gzip V8 inesperado: {len(raw)}/12685'
+          assert hashlib.sha256(raw).hexdigest()=='7baef24a2fe4968dd7bb334962721e7c99c910ada8f330f786e5869d266d9308'
+          script=gzip.decompress(raw)
+          assert len(script)==45594, f'Script V8 inesperado: {len(script)}/45594'
+          assert hashlib.sha256(script).hexdigest()=='b8ad76693a98ed572a3c398aad0998f9c6fc7f375dd5f2177b461f0b9ed22a56'
+          Path('/tmp/upgrade_aulagestion_v8.py').write_bytes(script)
+          PY
+
+          python /tmp/upgrade_aulagestion_v8.py
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('aulagestion-rd/index.html').read_text(encoding='utf-8')
+          required=[
+            'const APP_VERSION = 8;',
+            'section-reportes',
+            'buildAttendanceOfficialReport',
+            'buildRAOfficialReport',
+            'buildRPGGroupedReport',
+            'attMateria',
+            'saveReportSpecials',
+          ]
+          for token in required:
+            assert token in text, f'Falta token V8: {token}'
+          manifest=Path('aulagestion-rd/manifest.webmanifest').read_text(encoding='utf-8')
+          sw=Path('aulagestion-rd/sw.js').read_text(encoding='utf-8')
+          assert 'AulaGestión RD V8' in manifest
+          assert 'aulagestion-rd-v8-20260902' in sw
+          scripts=re.findall(r'<script(?: [^>]*)?>([\s\S]*?)</script>',text)
+          inline=[s for s in scripts if s.strip()]
+          assert inline, 'No se encontró JavaScript interno para validar.'
+          Path('/tmp/aulagestion-v8-inline.js').write_text(inline[-1],encoding='utf-8')
+          print('Index V8:',len(text.encode('utf-8')),'bytes')
+          PY
+
+          node --check /tmp/aulagestion-v8-inline.js
+
+      - name: Publicar V8 en main
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add aulagestion-rd/index.html aulagestion-rd/manifest.webmanifest aulagestion-rd/sw.js
+          git diff --cached --quiet && { echo 'No hay cambios que publicar'; exit 0; }
+          git commit -m 'Publicar AulaGestion RD V8: reportes oficiales [skip ci]'
+          git push origin main
