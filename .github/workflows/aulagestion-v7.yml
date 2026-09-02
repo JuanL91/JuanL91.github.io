@@ -1,0 +1,72 @@
+name: Publicar AulaGestion RD V7
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/aulagestion-v7/**'
+      - '.github/workflows/aulagestion-v7.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-v7:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruir y validar mejora V7
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib
+
+          base=Path('.github/aulagestion-v7')
+          parts=[base/'part00.b64',base/'part01.b64',base/'part02.b64']
+          b64=''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          assert len(b64)==13720, f'Base64 V7 incompleto: {len(b64)}/13720'
+          assert hashlib.sha256(b64.encode()).hexdigest()=='7c29c6f5ad02176a837397d5baba43dd4cbb6f1767f5756eb5eea16ae6b4f76d'
+          raw=base64.b64decode(b64)
+          assert len(raw)==10288, f'Gzip V7 inesperado: {len(raw)}/10288'
+          assert hashlib.sha256(raw).hexdigest()=='1431907622759ea8af315b6f3a42eb4413fa1776ff91539f3e0468e18520d9b9'
+          script=gzip.decompress(raw)
+          assert len(script)==40193, f'Script V7 inesperado: {len(script)}/40193'
+          assert hashlib.sha256(script).hexdigest()=='f400bbb5fc46006ae6639edacaf09491c0043537a44f478adbf2c8ce970521e0'
+          Path('/tmp/upgrade_aulagestion_v7.py').write_bytes(script)
+          PY
+
+          python /tmp/upgrade_aulagestion_v7.py
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('aulagestion-rd/index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?: [^>]*)?>([\s\S]*?)</script>',text)
+          inline=[s for s in scripts if s.strip()]
+          assert inline, 'No se encontró JavaScript interno para validar.'
+          Path('/tmp/aulagestion-v7-inline.js').write_text(inline[-1],encoding='utf-8')
+          assert 'const APP_VERSION = 7;' in text
+          assert 'attendanceHistoryPanel' in text
+          assert 'instrumentEvaluatorPanel' in text
+          assert 'metacognitionPanel' in text
+          print('Index V7:',len(text.encode('utf-8')),'bytes')
+          PY
+
+          node --check /tmp/aulagestion-v7-inline.js
+
+      - name: Publicar V7 en main
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add aulagestion-rd/index.html aulagestion-rd/manifest.webmanifest aulagestion-rd/sw.js
+          git diff --cached --quiet && { echo 'No hay cambios que publicar'; exit 0; }
+          git commit -m 'Publicar AulaGestion RD V7: asistencia e instrumentos [skip ci]'
+          git push origin main
