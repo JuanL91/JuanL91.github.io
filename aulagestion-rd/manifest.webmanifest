@@ -1,7 +1,7 @@
 {
-  "name": "AulaGestión RD V7",
+  "name": "AulaGestión RD V8",
   "short_name": "AulaGestión",
-  "description": "Gestión docente local-first con asistencia histórica, evaluación interactiva, seguimiento y respaldo privado.",
+  "description": "Gestión docente local-first con reportes oficiales de asistencia, RA, competencias y RPG, evaluación interactiva y respaldo privado.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
