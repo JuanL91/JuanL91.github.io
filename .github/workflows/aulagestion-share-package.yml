@@ -1,0 +1,288 @@
+name: Generar paquete compartible AulaGestion RD V8
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/aulagestion-share-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Construir edición compartible
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, shutil, hashlib, zipfile, textwrap
+
+          root=Path('.')
+          src=root/'aulagestion-rd'
+          out=root/'dist'/'AulaGestion_RD_V8_Compartir'
+          if out.exists(): shutil.rmtree(out)
+          out.mkdir(parents=True)
+
+          for name in ['manifest.webmanifest','sw.js','icon.svg']:
+              shutil.copy2(src/name,out/name)
+
+          text=(src/'index.html').read_text(encoding='utf-8')
+          original=text
+
+          # Separar la configuración OAuth de la aplicación y quitar la configuración personal.
+          text,n1=re.subn(r"const GOOGLE_CLIENT_ID = '[^']*';",
+              "const GOOGLE_CLIENT_ID = window.AULAGESTION_CONFIG?.googleClientId || '';",text,count=1)
+          text,n2=re.subn(r"const AUTHORIZED_USERS = new Map\(\[\['[0-9a-f]{64}',\{role:'Administrador'\}\]\]\);",
+              "const AUTHORIZED_USERS = new Map((window.AULAGESTION_CONFIG?.authorizedUsers || []).map(u=>[String(u.hash||'').toLowerCase(),{role:u.role||'Administrador'}]));",text,count=1)
+          text,n3=re.subn(r'const SEED_5TO_STUDENTS = \[[\s\S]*?\];','const SEED_5TO_STUDENTS = [];',text,count=1)
+          assert n1==1, 'No se encontró GOOGLE_CLIENT_ID para sanitizar.'
+          assert n2==1, 'No se encontró AUTHORIZED_USERS para sanitizar.'
+          assert n3==1, 'No se encontró la lista precargada de estudiantes para sanitizar.'
+
+          # Cargar configuración externa antes de Google Identity Services.
+          needle='  <script src="https://accounts.google.com/gsi/client" async defer></script>'
+          replacement='  <script src="./config.js"></script>\n'+needle
+          assert needle in text
+          text=text.replace(needle,replacement,1)
+
+          # Mensaje claro cuando todavía no se ha configurado Google.
+          boot="async function bootAuth(){showAuthGate('Preparando el inicio de sesión…');"
+          boot_new="async function bootAuth(){if(!GOOGLE_CLIENT_ID){showAuthGate('Configura config.js antes de iniciar sesión.');setAuthStatus('Falta el Google OAuth Client ID. Abre config.js y sigue la guía incluida.','error');const b=$('googleLoginButton');if(b)b.disabled=true;return}showAuthGate('Preparando el inicio de sesión…');"
+          assert boot in text
+          text=text.replace(boot,boot_new,1)
+
+          # Identificar esta distribución sin alterar la lógica de datos.
+          text=text.replace('<title>AulaGestión RD V8 | Gestión Docente Integral</title>','<title>AulaGestión RD V8 | Edición compartible</title>',1)
+
+          # Validaciones de privacidad.
+          forbidden=[
+              '1027532565910-2ego4k76sms9fcp9p1hkopgnkdcvbjig.apps.googleusercontent.com',
+              '227c75a438d6a5658422c0fbf2c104b09e35d499718f87d3633a19aa6e40fce2',
+              'Acosta Gonzales, Jefferson Alberto',
+              'Sánchez Cruz, Heidy',
+          ]
+          for value in forbidden:
+              assert value not in text, f'Dato personal/configuración todavía presente: {value[:24]}'
+
+          (out/'index.html').write_text(text,encoding='utf-8')
+
+          config="""// AulaGestión RD V8 · Configuración de la instalación
+// 1) Crea tu propio OAuth Client ID de Google (Aplicación web).
+// 2) Coloca aquí el Client ID.
+// 3) Genera el SHA-256 de cada correo autorizado con GENERAR_HASH_EMAIL.html.
+// No coloques Client Secret: una SPA no debe incluir secretos.
+
+window.AULAGESTION_CONFIG = {
+  googleClientId: '',
+  authorizedUsers: [
+    // Ejemplo:
+    // { hash: 'PEGA_AQUI_EL_SHA256_DEL_CORREO', role: 'Administrador' }
+  ]
+};
+"""
+          (out/'config.js').write_text(config,encoding='utf-8')
+
+          hash_tool="""<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Generar hash de correo · AulaGestión RD</title>
+<style>body{font-family:system-ui;background:#f1f5f9;margin:0;padding:30px;color:#0f172a}.card{max-width:720px;margin:auto;background:white;padding:28px;border-radius:18px;box-shadow:0 8px 30px #0001}input,button,textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;border-radius:10px;margin-top:10px}button{background:#4f46e5;color:white;font-weight:700;cursor:pointer}textarea{min-height:100px;font-family:monospace}.note{font-size:13px;color:#64748b}</style></head>
+<body><div class="card"><h1>Generar SHA-256 del correo autorizado</h1><p class="note">Todo se procesa localmente en este navegador. El correo se normaliza en minúsculas, igual que AulaGestión RD.</p><input id="email" type="email" placeholder="correo@gmail.com"><button onclick="go()">Generar hash</button><textarea id="out" readonly placeholder="Aquí aparecerá el hash"></textarea><button onclick="copyHash()">Copiar hash</button></div>
+<script>async function go(){const e=document.getElementById('email').value.trim().toLowerCase();if(!e)return;const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(e));document.getElementById('out').value=[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}async function copyHash(){const v=document.getElementById('out').value;if(v)await navigator.clipboard.writeText(v)}</script></body></html>"""
+          (out/'GENERAR_HASH_EMAIL.html').write_text(hash_tool,encoding='utf-8')
+
+          bat="""@echo off
+cd /d %~dp0
+where py >nul 2>nul
+if %errorlevel%==0 (
+  start "" http://localhost:5500
+  py -m http.server 5500
+  goto :eof
+)
+where python >nul 2>nul
+if %errorlevel%==0 (
+  start "" http://localhost:5500
+  python -m http.server 5500
+  goto :eof
+)
+echo.
+echo Python no esta instalado o no esta agregado al PATH.
+echo Instala Python y vuelve a ejecutar este archivo.
+pause
+"""
+          (out/'INICIAR_AULAGESTION_WINDOWS.bat').write_text(bat,encoding='utf-8',newline='\r\n')
+
+          readme="""# AulaGestión RD V8 · Edición compartible
+
+Este paquete contiene una copia limpia de AulaGestión RD V8 para instalar, revisar o adaptar en otro equipo.
+
+## Incluye
+
+- Gestión de modalidades, grados, secciones, materias y módulos formativos.
+- Pegado masivo de listas de estudiantes por grupo.
+- Calendario escolar y control de fechas no lectivas.
+- Asistencia P/A/T/E con historial de días, resúmenes por estudiante y reportes mensuales.
+- Asistencia vinculada a la materia o módulo formativo.
+- Evaluación de Técnico Profesional por Resultados de Aprendizaje (RA).
+- Evaluación de Artes/Académica por competencias y períodos.
+- Reportes de RA, RPG/competencias, recuperación pedagógica y asistencia en formato imprimible/PDF.
+- Instrumentos interactivos: rúbrica, lista de cotejo, escala y guía de observación.
+- Metacognición, bitácora, convivencia y seguimiento.
+- Exportación Excel y respaldo JSON.
+- IndexedDB como almacenamiento principal local.
+- Integración opcional con Google Drive (appDataFolder) y Microsoft OneDrive.
+- PWA y funcionamiento local después de cargar los recursos necesarios.
+
+## Privacidad de esta copia
+
+Esta distribución NO contiene:
+
+- el Google OAuth Client ID de la instalación original;
+- el hash de la cuenta Google original;
+- Client Secret alguno;
+- la lista real de estudiantes precargada de la instalación original;
+- respaldos personales de Google Drive/OneDrive.
+
+## Puesta en marcha local
+
+### Windows
+1. Descomprime el ZIP.
+2. Abre `config.js` y configura Google si quieres usar inicio de sesión/nube.
+3. Haz doble clic en `INICIAR_AULAGESTION_WINDOWS.bat`.
+4. Se abrirá `http://localhost:5500`.
+5. Mantén abierta la ventana del servidor mientras uses la app.
+
+También puedes ejecutar manualmente:
+
+    py -m http.server 5500
+
+ó
+
+    python -m http.server 5500
+
+## Configurar Google
+
+1. Crea un proyecto en Google Cloud.
+2. Habilita Google Drive API.
+3. Crea un cliente OAuth 2.0 de tipo **Aplicación web**.
+4. En Orígenes autorizados de JavaScript agrega, para pruebas locales:
+
+    http://localhost:5500
+
+5. Copia el Client ID en `config.js`.
+6. Abre `GENERAR_HASH_EMAIL.html`, escribe el correo que podrá acceder y copia el SHA-256 generado.
+7. En `config.js`, agrega el hash en `authorizedUsers`.
+
+Ejemplo:
+
+    window.AULAGESTION_CONFIG = {
+      googleClientId: 'TU_CLIENT_ID.apps.googleusercontent.com',
+      authorizedUsers: [
+        { hash: 'SHA256_DEL_CORREO', role: 'Administrador' }
+      ]
+    };
+
+No debes usar ni publicar un Client Secret en esta aplicación.
+
+## Publicar en GitHub Pages
+
+Puedes subir estos archivos a una carpeta de un repositorio de GitHub Pages. Después agrega el origen público en Google OAuth, por ejemplo:
+
+    https://tuusuario.github.io
+
+Para Microsoft OneDrive registra como SPA la URL completa de la carpeta publicada, terminada en `/`.
+
+## Datos
+
+Los datos se guardan primero en IndexedDB del navegador. Google Drive/OneDrive funcionan como respaldo/sincronización opcional. Cada navegador/origen web tiene su propia base local.
+
+## Versión
+
+AulaGestión RD V8 · paquete compartible generado desde la versión de trabajo validada.
+"""
+          (out/'LEEME_PRIMERO.md').write_text(readme,encoding='utf-8')
+
+          features="""AULAGESTIÓN RD V8 — RESUMEN DE FUNCIONES
+
+1. Estructura académica
+   - Técnico Profesional, Modalidad en Artes y Académica General.
+   - Grados, secciones, especialidades/menciones, materias y módulos.
+
+2. Estudiantes
+   - Alta individual.
+   - Pegado masivo de listas.
+   - Reasignación y reporte individual.
+
+3. Asistencia
+   - P = Presente, A = Ausente, T = Tardanza, E = Excusa.
+   - Registro por grupo + materia/módulo + fecha.
+   - Historial de días trabajados.
+   - Historial individual.
+   - Reporte mensual matricial estilo hoja docente.
+
+4. Evaluación
+   - Técnico Profesional: RA, C.R.A., RP1, RP2, ponderación, mínimo y resultado final.
+   - Artes/Académica: siete competencias, P1-P4, PC1-PC4, RPG, completiva, extraordinaria y especiales.
+   - Recuperación pedagógica.
+
+5. Instrumentos
+   - Rúbricas.
+   - Listas de cotejo.
+   - Escalas.
+   - Guías de observación.
+   - Historial de evaluaciones aplicadas.
+
+6. Reportes
+   - Asistencia mensual.
+   - Reporte oficial de RA.
+   - Competencias individuales.
+   - Competencias agrupadas + RPG.
+   - Recuperación pedagógica.
+   - Impresión/PDF y exportación Excel.
+
+7. Seguimiento
+   - Bitácora.
+   - Convivencia/conducta.
+   - Metacognición.
+
+8. Datos y nube
+   - IndexedDB local-first.
+   - Backup JSON.
+   - Excel.
+   - Google Drive appDataFolder.
+   - Microsoft OneDrive AppFolder.
+"""
+          (out/'FUNCIONES_V8.txt').write_text(features,encoding='utf-8')
+
+          zip_path=root/'downloads'/'AulaGestion_RD_V8_Compartir.zip'
+          zip_path.parent.mkdir(exist_ok=True)
+          if zip_path.exists(): zip_path.unlink()
+          with zipfile.ZipFile(zip_path,'w',zipfile.ZIP_DEFLATED) as z:
+              for p in sorted(out.rglob('*')):
+                  if p.is_file():
+                      z.write(p,Path('AulaGestion_RD_V8_Compartir')/p.relative_to(out))
+
+          digest=hashlib.sha256(zip_path.read_bytes()).hexdigest()
+          (root/'downloads'/'AulaGestion_RD_V8_Compartir.sha256.txt').write_text(
+              f'{digest}  AulaGestion_RD_V8_Compartir.zip\n',encoding='utf-8')
+          print('Paquete:',zip_path,zip_path.stat().st_size,'bytes')
+          print('SHA256:',digest)
+          PY
+
+      - name: Publicar descargable
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add downloads/AulaGestion_RD_V8_Compartir.zip downloads/AulaGestion_RD_V8_Compartir.sha256.txt
+          git diff --cached --quiet && { echo 'Paquete sin cambios'; exit 0; }
+          git commit -m 'Publicar descargable AulaGestion RD V8 compartible [skip ci]'
+          git push origin main
