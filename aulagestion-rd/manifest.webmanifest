@@ -1,7 +1,7 @@
 {
-  "name": "AulaGestión RD V6",
+  "name": "AulaGestión RD V7",
   "short_name": "AulaGestión",
-  "description": "Gestión docente local-first con acceso privado mediante Google.",
+  "description": "Gestión docente local-first con asistencia histórica, evaluación interactiva, seguimiento y respaldo privado.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
