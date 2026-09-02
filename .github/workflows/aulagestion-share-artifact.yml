@@ -1,0 +1,25 @@
+name: Artefacto AulaGestion RD V8 Compartible
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/aulagestion-share-artifact.yml'
+  workflow_dispatch:
+
+jobs:
+  artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar paquete
+        run: |
+          test -f downloads/AulaGestion_RD_V8_Compartir.zip
+          sha256sum downloads/AulaGestion_RD_V8_Compartir.zip
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: AulaGestion_RD_V8_Compartir
+          path: downloads/AulaGestion_RD_V8_Compartir.zip
+          if-no-files-found: error
+          retention-days: 30
