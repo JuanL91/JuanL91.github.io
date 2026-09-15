@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#4f46e5">
   <meta name="description" content="AulaGestión RD - Gestión docente local-first para Técnico Profesional, Artes y Académica General.">
-  <title>AulaGestión RD V9 | Gestión Docente Integral</title>
+  <title>AulaGestión RD V10 | Gestión Docente Integral</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -35,19 +35,19 @@
     </div>
     <hr class="w-10 border-slate-200">
     <nav class="flex flex-col gap-2 text-slate-400">
-      <button onclick="showSection('dashboard')" id="nav-dashboard" title="Dashboard" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition text-indigo-600 bg-indigo-50"><i class="fa-solid fa-house text-lg"></i></button>
-      <button onclick="showSection('academico')" id="nav-academico" title="Modalidades, grados y secciones" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-layer-group text-lg"></i></button>
-      <button onclick="showSection('materias')" id="nav-materias" title="Materias y módulos formativos" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-book-open text-lg"></i></button>
-      <button onclick="showSection('ficha')" id="nav-ficha" title="Ficha docente por materia o módulo" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-folder-open text-lg"></i></button>
-      <button onclick="showSection('estudiantes')" id="nav-estudiantes" title="Estudiantes y matrícula" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-users text-lg"></i></button>
-      <button onclick="showSection('calendario')" id="nav-calendario" title="Calendario escolar" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-calendar-days text-lg"></i></button>
-      <button onclick="showSection('asistencia')" id="nav-asistencia" title="Asistencia" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-user-check text-lg"></i></button>
-      <button onclick="showSection('reportes')" id="nav-reportes" title="Reportes oficiales" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-file-lines text-lg"></i></button>
-      <button onclick="showSection('actividades')" id="nav-actividades" title="Actividades y evidencias" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-list-check text-lg"></i></button>
-      <button onclick="showSection('evaluacion')" id="nav-evaluacion" title="RA y competencias" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-clipboard-check text-lg"></i></button>
-      <button onclick="showSection('seguimiento')" id="nav-seguimiento" title="Bitácora, instrumentos y convivencia" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-book-journal-whills text-lg"></i></button>
-      <button onclick="showSection('seguridad')" id="nav-seguridad" title="Seguridad y acceso" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-shield-halved text-lg"></i></button>
-      <button onclick="showSection('nube')" id="nav-nube" title="Nube y respaldos" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition"><i class="fa-solid fa-cloud-arrow-up text-lg"></i></button>
+      <button onclick="showSection('dashboard')" id="nav-dashboard" title="Dashboard" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition text-indigo-600 bg-indigo-50" aria-label="Dashboard"><i class="fa-solid fa-house text-lg"></i></button>
+      <button onclick="showSection('academico')" id="nav-academico" title="Modalidades, grados y secciones" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Modalidades, grados y secciones"><i class="fa-solid fa-layer-group text-lg"></i></button>
+      <button onclick="showSection('materias')" id="nav-materias" title="Materias y módulos formativos" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Materias y módulos formativos"><i class="fa-solid fa-book-open text-lg"></i></button>
+      <button onclick="showSection('ficha')" id="nav-ficha" title="Ficha docente por materia o módulo" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Ficha docente por materia o módulo"><i class="fa-solid fa-folder-open text-lg"></i></button>
+      <button onclick="showSection('estudiantes')" id="nav-estudiantes" title="Estudiantes y matrícula" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Estudiantes y matrícula"><i class="fa-solid fa-users text-lg"></i></button>
+      <button onclick="showSection('calendario')" id="nav-calendario" title="Calendario escolar" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Calendario escolar"><i class="fa-solid fa-calendar-days text-lg"></i></button>
+      <button onclick="showSection('asistencia')" id="nav-asistencia" title="Asistencia" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Asistencia"><i class="fa-solid fa-user-check text-lg"></i></button>
+      <button onclick="showSection('reportes')" id="nav-reportes" title="Reportes oficiales" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Reportes oficiales"><i class="fa-solid fa-file-lines text-lg"></i></button>
+      <button onclick="showSection('actividades')" id="nav-actividades" title="Actividades y evidencias" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Actividades y evidencias"><i class="fa-solid fa-list-check text-lg"></i></button>
+      <button onclick="showSection('evaluacion')" id="nav-evaluacion" title="RA y competencias" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="RA y competencias"><i class="fa-solid fa-clipboard-check text-lg"></i></button>
+      <button onclick="showSection('seguimiento')" id="nav-seguimiento" title="Bitácora, instrumentos y convivencia" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Bitácora, instrumentos y convivencia"><i class="fa-solid fa-book-journal-whills text-lg"></i></button>
+      <button onclick="showSection('seguridad')" id="nav-seguridad" title="Seguridad y acceso" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Seguridad y acceso"><i class="fa-solid fa-shield-halved text-lg"></i></button>
+      <button onclick="showSection('nube')" id="nav-nube" title="Nube y respaldos" class="nav-btn p-3 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition" aria-label="Nube y respaldos"><i class="fa-solid fa-cloud-arrow-up text-lg"></i></button>
     </nav>
   </aside>
 
@@ -56,7 +56,7 @@
       <div>
         <div class="flex items-center gap-3">
           <span class="text-sm font-extrabold text-slate-800">AulaGestión RD</span>
-          <span class="text-[10px] uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-100">V9 · interfaz unificada + accesos rápidos</span>
+          <span class="text-[10px] uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-100">V10 · UI/UX Pro Max · accesible y responsive</span>
         </div>
         <p class="text-xs text-slate-500 mt-0.5">Técnico Profesional · Modalidad en Artes · Académica General</p>
       </div>
@@ -64,14 +64,14 @@
         <div id="authUserChip" class="hidden items-center gap-2 border border-slate-200 rounded-full pl-1.5 pr-2 py-1 bg-white shadow-sm">
           <img id="authUserAvatar" alt="" class="w-7 h-7 rounded-full bg-slate-100 object-cover">
           <div class="hidden md:block leading-tight max-w-40"><strong id="authUserName" class="block text-[11px] truncate">Usuario</strong><span id="authUserRole" class="block text-[9px] text-slate-400 truncate">Administrador</span></div>
-          <button type="button" onclick="lockApplication()" class="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-500" title="Bloquear AulaGestión"><i class="fa-solid fa-lock"></i></button>
+          <button type="button" onclick="lockApplication()" class="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-500" title="Bloquear AulaGestión" aria-label="Bloquear AulaGestión"><i class="fa-solid fa-lock"></i></button>
         </div>
-        <button onclick="showSection('nube')" id="cloudStatusButton" class="status-pill status-local" title="Estado del respaldo"><i class="fa-solid fa-hard-drive"></i><span id="cloudStatusText">Guardado local</span></button>
-        <button type="button" onclick="toggleTheme()" id="themeToggleButton" class="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-lg font-semibold transition" title="Cambiar tema"><i class="fa-solid fa-moon mr-1"></i><span class="hidden sm:inline">Tema</span></button>
+        <button onclick="showSection('nube')" id="cloudStatusButton" class="status-pill status-local" title="Estado del respaldo" aria-label="Estado del respaldo"><i class="fa-solid fa-hard-drive"></i><span id="cloudStatusText">Guardado local</span></button>
+        <button type="button" onclick="toggleTheme()" id="themeToggleButton" class="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-3 py-2 rounded-lg font-semibold transition" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-moon mr-1"></i><span class="hidden sm:inline">Tema</span></button>
         <label class="font-semibold text-slate-500 hidden sm:inline">Año escolar</label>
         <input id="schoolYear" value="2026-2027" class="w-24 p-2 border rounded-lg bg-white font-semibold text-indigo-700" onchange="saveYear()">
-        <button onclick="exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-semibold transition" title="Exportar a Excel"><i class="fa-solid fa-file-excel mr-1"></i><span class="hidden sm:inline">Excel</span></button>
-        <button onclick="backupJSON()" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg font-semibold transition" title="Descargar respaldo"><i class="fa-solid fa-download mr-1"></i><span class="hidden sm:inline">Backup</span></button>
+        <button onclick="exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-semibold transition" title="Exportar a Excel" aria-label="Exportar a Excel"><i class="fa-solid fa-file-excel mr-1"></i><span class="hidden sm:inline">Excel</span></button>
+        <button onclick="backupJSON()" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg font-semibold transition" title="Descargar respaldo" aria-label="Descargar respaldo"><i class="fa-solid fa-download mr-1"></i><span class="hidden sm:inline">Backup</span></button>
       </div>
     </header>
 
@@ -318,7 +318,7 @@ José Rodríguez"></textarea></div>
           <div><label class="label">Materia / módulo</label><select id="attMateria" class="field" onchange="renderAttendance();renderAttendanceHistory()"></select></div>
           <div><label class="label">Fecha</label><input id="attDate" type="date" class="field" onchange="renderAttendance();renderAttendanceHistory()"></div>
           <label class="flex items-center gap-2 rounded-lg border p-3 text-xs bg-slate-50"><input id="attOverride" type="checkbox" onchange="renderAttendance();renderAttendanceHistory()"> Permitir registro extraordinario</label>
-          <div class="flex flex-wrap gap-1"><button onclick="markAllAttendance('P')" class="secondary-btn !w-auto px-2" title="Marcar todos presentes">P</button><button onclick="markAllAttendance('A')" class="secondary-btn !w-auto px-2" title="Marcar todos ausentes">A</button><button onclick="markAllAttendance('T')" class="secondary-btn !w-auto px-2" title="Marcar todos con tardanza">T</button><button onclick="markAllAttendance('E')" class="secondary-btn !w-auto px-2" title="Marcar todos con excusa">E</button><button onclick="saveAttendance()" class="primary-btn !w-auto px-4">Guardar</button></div>
+          <div class="flex flex-wrap gap-1"><button onclick="markAllAttendance('P')" class="secondary-btn !w-auto px-2" title="Marcar todos presentes" aria-label="Marcar todos presentes">P</button><button onclick="markAllAttendance('A')" class="secondary-btn !w-auto px-2" title="Marcar todos ausentes" aria-label="Marcar todos ausentes">A</button><button onclick="markAllAttendance('T')" class="secondary-btn !w-auto px-2" title="Marcar todos con tardanza" aria-label="Marcar todos con tardanza">T</button><button onclick="markAllAttendance('E')" class="secondary-btn !w-auto px-2" title="Marcar todos con excusa" aria-label="Marcar todos con excusa">E</button><button onclick="saveAttendance()" class="primary-btn !w-auto px-4">Guardar</button></div>
         </div>
         <div id="attDayNotice" class="mt-4 text-xs"></div>
       </div>
@@ -612,7 +612,7 @@ José Rodríguez"></textarea></div>
           </div>
           <div class="space-y-3">
             <div><label class="label">Microsoft Entra Client ID</label><input id="microsoftClientId" class="field" placeholder="ID de aplicación (cliente)"></div>
-            <div><label class="label">URI de redirección que debes registrar como SPA</label><div class="flex gap-2"><input id="microsoftRedirectUri" class="field bg-slate-50" readonly><button onclick="copyRedirectUri()" class="secondary-btn !w-auto px-3" title="Copiar"><i class="fa-solid fa-copy"></i></button></div></div>
+            <div><label class="label">URI de redirección que debes registrar como SPA</label><div class="flex gap-2"><input id="microsoftRedirectUri" class="field bg-slate-50" readonly><button onclick="copyRedirectUri()" class="secondary-btn !w-auto px-3" title="Copiar" aria-label="Copiar"><i class="fa-solid fa-copy"></i></button></div></div>
             <div class="rounded-lg bg-slate-50 border p-3 text-xs text-slate-600"><strong>Permiso solicitado:</strong> <code>Files.ReadWrite.AppFolder</code>. Se usa OAuth 2.0 Authorization Code + PKCE, sin contraseña ni client secret.</div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button onclick="saveCloudSettings(); microsoftConnectRequested('connect')" class="provider-btn bg-sky-600 hover:bg-sky-700"><i class="fa-brands fa-microsoft mr-2"></i>Conectar Microsoft</button>
@@ -689,12 +689,222 @@ José Rodríguez"></textarea></div>
     .official-report{background:#fff;color:#111;font-family:Arial,sans-serif}.or-head{border:1px solid #111;margin-bottom:8px}.or-head-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid #111}.or-head-row:last-child{border-bottom:0}.or-head-row>*{padding:6px 8px}.or-head-label{font-weight:800;background:#666;color:#fff;text-align:center}.or-head-value{text-align:center;font-weight:700;background:#e5e7eb}.or-table{border-collapse:collapse;width:100%;font-size:10px}.or-table th,.or-table td{border:1px solid #111;padding:3px 4px;text-align:center;vertical-align:middle}.or-table th{font-weight:800}.or-table .name{text-align:left;min-width:190px}.or-table .green{background:#176b2c;color:#fff}.or-table .green-soft{background:#d1e8b3}.or-table .blue{background:#9fc5e8}.or-table .gray{background:#c8c8c8}.or-table .red{background:#ff1f1f}.or-table .status-pass{font-weight:800;color:#166534}.or-table .status-fail{font-weight:800;color:#b91c1c}.or-att-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;min-width:1600px}.or-att-month{border:1px solid #111}.or-att-title{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #111;padding:4px 6px;font-family:Georgia,serif;font-weight:800}.or-att-grid{border-collapse:collapse;width:100%;font-size:7px}.or-att-grid th,.or-att-grid td{border:1px solid #111;padding:1px;text-align:center;height:15px}.or-att-grid .name{min-width:170px;text-align:left;font-size:7px;padding-left:3px}.or-att-grid .day{min-width:13px}.or-att-grid .holiday{background:#fee2e2;color:#b91c1c}.or-att-grid .p{color:#0369a1;font-weight:800}.or-att-grid .a{background:#fecaca;color:#b91c1c;font-weight:800}.or-att-grid .t{background:#fed7aa;color:#9a3412;font-weight:800}.or-att-grid .e{background:#fef08a;color:#854d0e;font-weight:800}.or-att-grid .sum{min-width:20px}.or-att-grid .pct{min-width:31px;color:#0369a1}.or-rpg-wrap{min-width:2100px}.or-rotate{writing-mode:vertical-rl;transform:rotate(180deg);white-space:normal;height:110px;min-width:25px}.or-section-title{text-align:center;font-weight:900;font-size:18px;padding:8px;background:#76953d;color:#000;border:1px solid #111}.or-note{font-size:9px;color:#475569;margin-top:6px}.or-page{page-break-after:always}.or-page:last-child{page-break-after:auto}
     [data-app-theme="dark"] .official-report{background:#fff;color:#111}
 
+  
+
+    /* =========================================================
+       V10 · UI/UX Pro Max Design System
+       Educational App + Productivity Tool + Administrative UI
+       Accessible & Ethical + Swiss Minimal + Flat/Microinteractions
+       ========================================================= */
+    :root{
+      --ag-primary:#4f46e5;
+      --ag-primary-strong:#3730a3;
+      --ag-primary-soft:#eef2ff;
+      --ag-accent:#0284c7;
+      --ag-accent-soft:#e0f2fe;
+      --ag-success:#059669;
+      --ag-success-soft:#ecfdf5;
+      --ag-warning:#d97706;
+      --ag-warning-soft:#fffbeb;
+      --ag-danger:#e11d48;
+      --ag-danger-soft:#fff1f2;
+      --ag-bg:#f6f8fc;
+      --ag-surface:#ffffff;
+      --ag-surface-2:#f8fafc;
+      --ag-text:#172033;
+      --ag-muted:#64748b;
+      --ag-border:#dfe6f0;
+      --ag-ring:rgba(79,70,229,.28);
+      --ag-shadow-sm:0 1px 2px rgba(15,23,42,.04),0 1px 3px rgba(15,23,42,.04);
+      --ag-shadow-md:0 10px 28px rgba(30,41,59,.08),0 2px 7px rgba(30,41,59,.05);
+      --ag-shadow-lg:0 24px 64px rgba(30,41,59,.14);
+      --ag-radius-sm:.75rem;
+      --ag-radius-md:1rem;
+      --ag-radius-lg:1.25rem;
+      --ag-speed-fast:140ms;
+      --ag-speed:220ms;
+    }
+    html[data-app-theme="dark"]{
+      --ag-primary:#818cf8;
+      --ag-primary-strong:#a5b4fc;
+      --ag-primary-soft:#202447;
+      --ag-accent:#38bdf8;
+      --ag-accent-soft:#0c3144;
+      --ag-success:#34d399;
+      --ag-success-soft:#12372d;
+      --ag-warning:#fbbf24;
+      --ag-warning-soft:#3a2d11;
+      --ag-danger:#fb7185;
+      --ag-danger-soft:#431923;
+      --ag-bg:#0b1220;
+      --ag-surface:#111a2b;
+      --ag-surface-2:#162136;
+      --ag-text:#f1f5f9;
+      --ag-muted:#b6c2d2;
+      --ag-border:#2b3950;
+      --ag-ring:rgba(129,140,248,.38);
+      --ag-shadow-sm:0 1px 2px rgba(0,0,0,.25);
+      --ag-shadow-md:0 16px 34px rgba(0,0,0,.28);
+      --ag-shadow-lg:0 30px 70px rgba(0,0,0,.4);
+    }
+
+    @media screen{
+      html{scroll-behavior:smooth;background:var(--ag-bg)}
+      body{
+        min-height:100dvh!important;
+        background:
+          radial-gradient(circle at 88% 2%,rgba(79,70,229,.07),transparent 28rem),
+          radial-gradient(circle at 10% 96%,rgba(2,132,199,.045),transparent 24rem),
+          var(--ag-bg)!important;
+        color:var(--ag-text)!important;
+        font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif!important;
+        line-height:1.5;
+        overflow-wrap:anywhere;
+      }
+      button,input,select,textarea{font:inherit}
+      button:not(:disabled),[role="button"]{cursor:pointer;touch-action:manipulation}
+      button:disabled{cursor:not-allowed;opacity:.48}
+      :focus-visible{
+        outline:3px solid var(--ag-ring)!important;
+        outline-offset:2px!important;
+        box-shadow:0 0 0 2px var(--ag-surface),0 0 0 5px var(--ag-ring)!important;
+      }
+
+      aside{
+        background:color-mix(in srgb,var(--ag-surface) 94%,transparent)!important;
+        border-color:var(--ag-border)!important;
+        box-shadow:4px 0 24px rgba(15,23,42,.035)!important;
+        backdrop-filter:saturate(140%) blur(12px);
+      }
+      aside nav{width:100%}
+      .nav-btn{
+        min-width:44px;min-height:44px;
+        display:flex!important;align-items:center;justify-content:center;
+        border-radius:12px!important;
+        transition:background var(--ag-speed-fast) ease,color var(--ag-speed-fast) ease,box-shadow var(--ag-speed-fast) ease!important;
+        position:relative;
+      }
+      .nav-btn:hover{background:var(--ag-primary-soft)!important;color:var(--ag-primary)!important}
+      .nav-btn.bg-indigo-50{background:var(--ag-primary-soft)!important;color:var(--ag-primary)!important;box-shadow:inset 3px 0 0 var(--ag-primary)}
+      @media (min-width:1100px){
+        aside{width:17.5rem!important;align-items:stretch!important;padding:1rem .75rem!important;gap:1rem!important}
+        aside>div:first-child{width:100%!important;height:52px!important;justify-content:flex-start!important;padding:0 .75rem!important;gap:.7rem!important;background:linear-gradient(135deg,var(--ag-primary),var(--ag-accent))!important;border-radius:16px!important}
+        aside>div:first-child::after{content:"AulaGestión RD";font-size:.92rem;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+        aside>hr{width:100%!important;border-color:var(--ag-border)!important}
+        .nav-btn{width:100%!important;justify-content:flex-start!important;gap:.8rem!important;padding:.72rem .9rem!important;color:var(--ag-muted)}
+        .nav-btn::after{content:attr(title);font-size:.82rem;font-weight:650;text-align:left;white-space:normal;line-height:1.2}
+        .nav-btn i{width:1.3rem;text-align:center;font-size:1rem!important}
+      }
+
+      header{
+        background:color-mix(in srgb,var(--ag-surface) 92%,transparent)!important;
+        border-color:var(--ag-border)!important;
+        backdrop-filter:saturate(140%) blur(14px);
+        box-shadow:0 1px 0 rgba(15,23,42,.03)!important;
+      }
+      header button,header input{min-height:40px}
+      #cloudStatusButton{border-radius:999px!important;font-weight:750!important;border:1px solid var(--ag-border)!important;background:var(--ag-surface)!important;box-shadow:var(--ag-shadow-sm)}
+      #cloudStatusButton:hover{border-color:color-mix(in srgb,var(--ag-primary) 35%,var(--ag-border))!important}
+
+      .section{scroll-padding-top:5rem}
+      .section>div:first-child h1{letter-spacing:-.025em;color:var(--ag-text)!important;text-wrap:balance}
+      .section>div:first-child p{color:var(--ag-muted)!important}
+
+      .panel,.metric-card,.auth-card{
+        background:var(--ag-surface)!important;
+        border:1px solid var(--ag-border)!important;
+        box-shadow:var(--ag-shadow-sm)!important;
+      }
+      .panel{border-radius:var(--ag-radius-lg)!important;padding:1.35rem!important}
+      .metric-card{border-radius:var(--ag-radius-md)!important;transition:transform var(--ag-speed) ease,box-shadow var(--ag-speed) ease,border-color var(--ag-speed) ease!important;overflow:hidden;position:relative}
+      .metric-card::after{content:"";position:absolute;inset:auto 0 0 0;height:2px;background:linear-gradient(90deg,var(--ag-primary),var(--ag-accent));opacity:.65}
+      .metric-card:hover{transform:translateY(-2px);box-shadow:var(--ag-shadow-md)!important;border-color:color-mix(in srgb,var(--ag-primary) 24%,var(--ag-border))!important}
+      .metric-number{font-variant-numeric:tabular-nums;letter-spacing:-.035em;color:var(--ag-text)!important}
+      .metric-label{color:var(--ag-muted)!important}
+      .metric-icon{border-radius:14px!important}
+      .panel-title{gap:.8rem!important}
+      .panel-title h3{letter-spacing:-.012em;color:var(--ag-text)!important}
+      .panel-title p{color:var(--ag-muted)!important;line-height:1.45}
+
+      #dashboardQuickActions>button{
+        min-height:92px;
+        border-color:var(--ag-border)!important;
+        border-radius:var(--ag-radius-lg)!important;
+        background:linear-gradient(145deg,var(--ag-surface),color-mix(in srgb,var(--ag-primary-soft) 18%,var(--ag-surface)))!important;
+        box-shadow:var(--ag-shadow-sm)!important;
+        transition:transform var(--ag-speed) ease,box-shadow var(--ag-speed) ease,border-color var(--ag-speed) ease!important;
+      }
+      #dashboardQuickActions>button:hover{transform:translateY(-2px);box-shadow:var(--ag-shadow-md)!important;border-color:color-mix(in srgb,var(--ag-primary) 30%,var(--ag-border))!important}
+      #dashboardQuickActions>button:active{transform:translateY(0)}
+
+      .primary-btn,.secondary-btn{
+        min-height:44px!important;
+        border-radius:12px!important;
+        font-weight:750!important;
+        transition:filter var(--ag-speed-fast) ease,box-shadow var(--ag-speed-fast) ease,transform var(--ag-speed-fast) ease!important;
+      }
+      .primary-btn{background:linear-gradient(135deg,var(--ag-primary),var(--ag-primary-strong))!important;box-shadow:0 6px 16px rgba(79,70,229,.16)!important}
+      .primary-btn:hover{filter:brightness(1.04);box-shadow:0 10px 24px rgba(79,70,229,.22)!important}
+      .primary-btn:active,.secondary-btn:active{transform:translateY(1px)}
+      .secondary-btn{background:var(--ag-surface)!important;color:var(--ag-text)!important;border-color:var(--ag-border)!important}
+      .secondary-btn:hover{background:var(--ag-surface-2)!important;border-color:color-mix(in srgb,var(--ag-primary) 28%,var(--ag-border))!important}
+
+      input,select,textarea{
+        min-height:44px;
+        border-color:var(--ag-border)!important;
+        background:var(--ag-surface)!important;
+        color:var(--ag-text)!important;
+        border-radius:11px!important;
+        transition:border-color var(--ag-speed-fast) ease,box-shadow var(--ag-speed-fast) ease,background var(--ag-speed-fast) ease;
+      }
+      textarea{min-height:90px}
+      input:hover,select:hover,textarea:hover{border-color:color-mix(in srgb,var(--ag-primary) 28%,var(--ag-border))!important}
+      input:focus,select:focus,textarea:focus{border-color:var(--ag-primary)!important;box-shadow:0 0 0 4px var(--ag-ring)!important;outline:none!important}
+      label{color:var(--ag-text)}
+
+      .badge,.status-pill{border-radius:999px!important;font-weight:700!important;letter-spacing:.01em}
+      .toast{border-radius:14px!important;box-shadow:var(--ag-shadow-lg)!important}
+
+      .overflow-x-auto{border-radius:14px;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--ag-primary) 34%,transparent) transparent}
+      table{font-variant-numeric:tabular-nums}
+      table th{background:var(--ag-surface-2)!important;color:var(--ag-text)!important;font-size:.72rem!important;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}
+      table td,table th{border-color:var(--ag-border)!important}
+      table tbody tr{transition:background var(--ag-speed-fast) ease}
+      table tbody tr:hover{background:color-mix(in srgb,var(--ag-primary-soft) 34%,transparent)!important}
+
+      .bg-slate-50{background:var(--ag-surface-2)!important}
+      .border-slate-200,.border-slate-100{border-color:var(--ag-border)!important}
+      .text-slate-800,.text-slate-700,.text-slate-600{color:var(--ag-text)!important}
+      .text-slate-500,.text-slate-400{color:var(--ag-muted)!important}
+
+      .auth-gate{background:linear-gradient(145deg,rgba(15,23,42,.78),rgba(30,41,59,.7))!important;backdrop-filter:blur(8px)}
+      .auth-card{border-radius:24px!important;box-shadow:var(--ag-shadow-lg)!important}
+      .auth-logo{background:linear-gradient(135deg,var(--ag-primary),var(--ag-accent))!important;box-shadow:0 14px 30px rgba(79,70,229,.22)!important}
+      .auth-google-btn{min-height:48px!important;border-radius:13px!important}
+
+      @media (max-width:767px){
+        .section{padding:1rem!important}
+        .panel{padding:1rem!important;border-radius:16px!important}
+        #dashboardQuickActions{gap:.75rem!important}
+        #dashboardQuickActions>button{min-height:78px;padding:1rem!important}
+        .metric-card{padding:1rem!important}
+        header{padding:.65rem .9rem!important}
+        header .text-sm.font-extrabold{font-size:.9rem!important}
+        table{font-size:.79rem}
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto!important}
+      *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+    }
+
   </style>
 
   <script>
     'use strict';
 
-    const APP_VERSION = 9;
+    const APP_VERSION = 10;
     const GOOGLE_CLIENT_ID = '1027532565910-2ego4k76sms9fcp9p1hkopgnkdcvbjig.apps.googleusercontent.com';
     const GOOGLE_SCOPES = 'openid email profile https://www.googleapis.com/auth/drive.appdata';
     const AUTH_IDLE_MS = 30*60*1000;
@@ -916,7 +1126,7 @@ José Rodríguez"></textarea></div>
 
     function renderMaterias(){
       const q=($('filterMaterias')?.value||'').toLowerCase(),body=$('tableMateriasBody');body.innerHTML='';
-      materias.filter(m=>`${m.codigo} ${m.nombre} ${m.tipo}`.toLowerCase().includes(q)).forEach(m=>{const c=cursoById(m.cursoId);body.innerHTML+=`<tr><td class="font-bold text-indigo-700">${esc(m.codigo||'—')}</td><td><div class="font-semibold">${esc(m.nombre)}</div><div class="text-xs text-slate-400">${esc(m.horas||'—')} h/sem · ${esc(m.ponderacion||100)}%</div></td><td class="text-slate-600">${c?esc(cursoLabel(c)):'Sin grupo'}</td><td><span class="badge">${esc(m.tipo)}</span></td><td class="text-right whitespace-nowrap"><button class="text-indigo-600 hover:text-indigo-800 mr-3" title="Abrir ficha docente" onclick="openWorkspace(${JSON.stringify(m.id)})"><i class="fa-solid fa-folder-open"></i></button><button class="danger" title="Eliminar" onclick="deleteMateria(${JSON.stringify(m.id)})"><i class="fa-solid fa-trash"></i></button></td></tr>`});
+      materias.filter(m=>`${m.codigo} ${m.nombre} ${m.tipo}`.toLowerCase().includes(q)).forEach(m=>{const c=cursoById(m.cursoId);body.innerHTML+=`<tr><td class="font-bold text-indigo-700">${esc(m.codigo||'—')}</td><td><div class="font-semibold">${esc(m.nombre)}</div><div class="text-xs text-slate-400">${esc(m.horas||'—')} h/sem · ${esc(m.ponderacion||100)}%</div></td><td class="text-slate-600">${c?esc(cursoLabel(c)):'Sin grupo'}</td><td><span class="badge">${esc(m.tipo)}</span></td><td class="text-right whitespace-nowrap"><button class="text-indigo-600 hover:text-indigo-800 mr-3" title="Abrir ficha docente" onclick="openWorkspace(${JSON.stringify(m.id)})" aria-label="Abrir ficha docente"><i class="fa-solid fa-folder-open"></i></button><button class="danger" title="Eliminar" onclick="deleteMateria(${JSON.stringify(m.id)})" aria-label="Eliminar"><i class="fa-solid fa-trash"></i></button></td></tr>`});
       refreshSelectors();renderDashboardCards();
     }
     $('materiaForm').addEventListener('submit',async e=>{e.preventDefault();const item={id:Date.now(),cursoId:Number($('matCurso').value),tipo:$('matTipo').value,codigo:$('matCodigo').value.trim(),nombre:$('matNombre').value.trim(),horas:$('matHoras').value,ponderacion:Number($('matPonderacion').value||100)};materias.push(item);await dbPut('materias',item);await markDirty();e.target.reset();$('matPonderacion').value=100;renderMaterias();renderAll()});
@@ -925,7 +1135,7 @@ José Rodríguez"></textarea></div>
     function normalizedName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9ñ ]/g,' ').replace(/\s+/g,' ').trim()}
     function renderStudents(){
       const q=($('filterStudents')?.value||'').toLowerCase(),courseFilter=$('filterStudentsCourse')?.value||'',body=$('tableStudentsBody');body.innerHTML='';
-      alumnos.filter(a=>(!courseFilter||String(a.cursoId)===String(courseFilter))&&a.nombre.toLowerCase().includes(q)).sort((a,b)=>{if(String(a.cursoId)!==String(b.cursoId))return String(a.cursoId).localeCompare(String(b.cursoId));return (Number(a.numero)||999)-(Number(b.numero)||999)||a.nombre.localeCompare(b.nombre)}).forEach(a=>{const c=cursoById(a.cursoId);body.innerHTML+=`<tr><td><div class="font-semibold">${esc(a.nombre)}</div><div class="text-xs text-slate-400">${a.numero?('No. '+esc(a.numero)):''}</div></td><td>${c?esc(cursoLabel(c)):'Sin grupo'}</td><td>${c?`<span class="badge">${esc(c.modalidad)}</span>`:'—'}</td><td class="text-right whitespace-nowrap"><button class="text-sky-600 hover:text-sky-800 mr-3" title="Reporte" onclick="openStudentReport(${JSON.stringify(a.id)})"><i class="fa-solid fa-chart-column"></i></button><button class="text-indigo-600 hover:text-indigo-800 mr-3" title="Editar / reasignar" onclick="editStudent(${JSON.stringify(a.id)})"><i class="fa-solid fa-pen"></i></button><button class="danger" title="Eliminar" onclick="deleteStudent(${JSON.stringify(a.id)})"><i class="fa-solid fa-trash"></i></button></td></tr>`});
+      alumnos.filter(a=>(!courseFilter||String(a.cursoId)===String(courseFilter))&&a.nombre.toLowerCase().includes(q)).sort((a,b)=>{if(String(a.cursoId)!==String(b.cursoId))return String(a.cursoId).localeCompare(String(b.cursoId));return (Number(a.numero)||999)-(Number(b.numero)||999)||a.nombre.localeCompare(b.nombre)}).forEach(a=>{const c=cursoById(a.cursoId);body.innerHTML+=`<tr><td><div class="font-semibold">${esc(a.nombre)}</div><div class="text-xs text-slate-400">${a.numero?('No. '+esc(a.numero)):''}</div></td><td>${c?esc(cursoLabel(c)):'Sin grupo'}</td><td>${c?`<span class="badge">${esc(c.modalidad)}</span>`:'—'}</td><td class="text-right whitespace-nowrap"><button class="text-sky-600 hover:text-sky-800 mr-3" title="Reporte" onclick="openStudentReport(${JSON.stringify(a.id)})" aria-label="Reporte"><i class="fa-solid fa-chart-column"></i></button><button class="text-indigo-600 hover:text-indigo-800 mr-3" title="Editar / reasignar" onclick="editStudent(${JSON.stringify(a.id)})" aria-label="Editar / reasignar"><i class="fa-solid fa-pen"></i></button><button class="danger" title="Eliminar" onclick="deleteStudent(${JSON.stringify(a.id)})" aria-label="Eliminar"><i class="fa-solid fa-trash"></i></button></td></tr>`});
       if(!body.innerHTML)body.innerHTML='<tr><td colspan="4" class="text-center text-slate-400">No hay estudiantes con este filtro.</td></tr>';
       refreshSelectors();renderDashboardCards();renderIntegrityAudit();
     }
@@ -1022,7 +1232,7 @@ José Rodríguez"></textarea></div>
     function attendanceSessionSummary(courseId,date){const rows=attendanceSessionRows(courseId,date),counts={P:0,A:0,T:0,E:0};rows.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);const pct=rows.length?((counts.P+counts.T+counts.E)/rows.length*100):0;return{date,rows,counts,pct}}
     function attendanceWeekday(date){try{return new Date(date+'T12:00:00').toLocaleDateString('es-DO',{weekday:'long'})}catch{return'—'}}
     function renderAttendanceDraftStats(){const el=$('attDayStats');if(!el)return;const rows=[...document.querySelectorAll('#attRosterBody tr[data-student]')],counts={P:0,A:0,T:0,E:0};rows.forEach(r=>{const s=r.querySelector('.att-status');if(s)counts[s.value]=(counts[s.value]||0)+1});const total=rows.length,pct=total?((counts.P+counts.T+counts.E)/total*100):0;el.innerHTML=[['P',counts.P],['A',counts.A],['T',counts.T],['E',counts.E],['%',total?pct.toFixed(1)+'%':'—']].map(([k,v])=>`<div class="rounded-lg border bg-slate-50 p-2 text-center"><div class="text-[10px] uppercase text-slate-500">${k}</div><div class="font-extrabold">${v}</div></div>`).join('')}
-    function renderAttendanceHistory(){if(!$('attHistoryBody')||!$('attCourse'))return;const courseId=$('attCourse').value;if(!courseId){$('attHistoryBody').innerHTML='<tr><td colspan="9" class="text-center text-slate-400">Selecciona un grupo.</td></tr>';return}const rows=asistencias.filter(a=>String(a.courseId)===String(courseId)),dates=[...new Set(rows.map(a=>a.date))].sort().reverse(),months=[...new Set(dates.map(d=>d.slice(0,7)))].sort().reverse();if(!$('attHistoryMonth').value)$('attHistoryMonth').value=(($('attDate')?.value||dates[0]||todayIso()).slice(0,7));let month=$('attHistoryMonth').value;const filter=$('attHistoryFilter').value;let sessions=dates.filter(d=>!month||d.startsWith(month)).map(d=>attendanceSessionSummary(courseId,d));if(filter==='incidents')sessions=sessions.filter(s=>s.counts.A+s.counts.T+s.counts.E>0);if(filter==='absences')sessions=sessions.filter(s=>s.counts.A>0);const body=$('attHistoryBody');body.innerHTML=sessions.map(s=>`<tr><td class="font-semibold">${esc(fmtDate(s.date))}</td><td class="capitalize">${esc(attendanceWeekday(s.date))}</td><td>${s.rows.length}</td><td>${s.counts.P}</td><td>${s.counts.A}</td><td>${s.counts.T}</td><td>${s.counts.E}</td><td class="${s.pct>=80?'score-pass':'score-fail'}">${s.pct.toFixed(1)}%</td><td class="whitespace-nowrap"><button class="text-indigo-600 mr-3" onclick="openAttendanceDay('${s.date}')" title="Abrir fecha"><i class="fa-solid fa-folder-open"></i></button><button class="danger" onclick="deleteAttendanceDay('${s.date}')" title="Eliminar pase de lista"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="9" class="text-center text-slate-400">No hay pases de lista para este filtro.</td></tr>';const totals=sessions.reduce((o,s)=>{o.days++;o.P+=s.counts.P;o.A+=s.counts.A;o.T+=s.counts.T;o.E+=s.counts.E;return o},{days:0,P:0,A:0,T:0,E:0});$('attHistoryStats').innerHTML=[['Días con asistencia',totals.days],['Presentes',totals.P],['Ausentes',totals.A],['Tardanzas',totals.T],['Excusas',totals.E]].map(([k,v])=>`<div class="rounded-lg border bg-slate-50 p-3"><div class="text-[10px] uppercase text-slate-500">${esc(k)}</div><div class="text-xl font-extrabold">${v}</div></div>`).join('');const stSel=$('attHistoryStudent'),cur=stSel.value,students=studentsForCourse(courseId);stSel.innerHTML='<option value="">Selecciona un estudiante</option>'+students.map(s=>`<option value="${esc(s.id)}">${esc(s.numero?s.numero+' · ':'')}${esc(s.nombre)}</option>`).join('');if(students.some(s=>String(s.id)===String(cur)))stSel.value=cur;renderAttendanceStudentHistory();renderAttendanceDraftStats()}
+    function renderAttendanceHistory(){if(!$('attHistoryBody')||!$('attCourse'))return;const courseId=$('attCourse').value;if(!courseId){$('attHistoryBody').innerHTML='<tr><td colspan="9" class="text-center text-slate-400">Selecciona un grupo.</td></tr>';return}const rows=asistencias.filter(a=>String(a.courseId)===String(courseId)),dates=[...new Set(rows.map(a=>a.date))].sort().reverse(),months=[...new Set(dates.map(d=>d.slice(0,7)))].sort().reverse();if(!$('attHistoryMonth').value)$('attHistoryMonth').value=(($('attDate')?.value||dates[0]||todayIso()).slice(0,7));let month=$('attHistoryMonth').value;const filter=$('attHistoryFilter').value;let sessions=dates.filter(d=>!month||d.startsWith(month)).map(d=>attendanceSessionSummary(courseId,d));if(filter==='incidents')sessions=sessions.filter(s=>s.counts.A+s.counts.T+s.counts.E>0);if(filter==='absences')sessions=sessions.filter(s=>s.counts.A>0);const body=$('attHistoryBody');body.innerHTML=sessions.map(s=>`<tr><td class="font-semibold">${esc(fmtDate(s.date))}</td><td class="capitalize">${esc(attendanceWeekday(s.date))}</td><td>${s.rows.length}</td><td>${s.counts.P}</td><td>${s.counts.A}</td><td>${s.counts.T}</td><td>${s.counts.E}</td><td class="${s.pct>=80?'score-pass':'score-fail'}">${s.pct.toFixed(1)}%</td><td class="whitespace-nowrap"><button class="text-indigo-600 mr-3" onclick="openAttendanceDay('${s.date}')" title="Abrir fecha" aria-label="Abrir fecha"><i class="fa-solid fa-folder-open"></i></button><button class="danger" onclick="deleteAttendanceDay('${s.date}')" title="Eliminar pase de lista" aria-label="Eliminar pase de lista"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="9" class="text-center text-slate-400">No hay pases de lista para este filtro.</td></tr>';const totals=sessions.reduce((o,s)=>{o.days++;o.P+=s.counts.P;o.A+=s.counts.A;o.T+=s.counts.T;o.E+=s.counts.E;return o},{days:0,P:0,A:0,T:0,E:0});$('attHistoryStats').innerHTML=[['Días con asistencia',totals.days],['Presentes',totals.P],['Ausentes',totals.A],['Tardanzas',totals.T],['Excusas',totals.E]].map(([k,v])=>`<div class="rounded-lg border bg-slate-50 p-3"><div class="text-[10px] uppercase text-slate-500">${esc(k)}</div><div class="text-xl font-extrabold">${v}</div></div>`).join('');const stSel=$('attHistoryStudent'),cur=stSel.value,students=studentsForCourse(courseId);stSel.innerHTML='<option value="">Selecciona un estudiante</option>'+students.map(s=>`<option value="${esc(s.id)}">${esc(s.numero?s.numero+' · ':'')}${esc(s.nombre)}</option>`).join('');if(students.some(s=>String(s.id)===String(cur)))stSel.value=cur;renderAttendanceStudentHistory();renderAttendanceDraftStats()}
     function renderAttendanceStudentHistory(){const wrap=$('attStudentHistory');if(!wrap)return;const sid=$('attHistoryStudent').value,month=$('attHistoryMonth').value;if(!sid){wrap.innerHTML='<p class="text-xs text-slate-400">Selecciona un estudiante para ver sus días de asistencia.</p>';return}const rows=asistencias.filter(a=>String(a.studentId)===String(sid)&&(!month||a.date.startsWith(month))).sort((a,b)=>b.date.localeCompare(a.date)),counts={P:0,A:0,T:0,E:0};rows.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);wrap.innerHTML=`<div class="flex flex-wrap gap-2 mb-3 text-xs"><span class="badge">P ${counts.P}</span><span class="badge">A ${counts.A}</span><span class="badge">T ${counts.T}</span><span class="badge">E ${counts.E}</span></div><table class="table"><thead><tr><th>Fecha</th><th>Día</th><th>Estado</th><th>Observación</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(fmtDate(r.date))}</td><td class="capitalize">${esc(attendanceWeekday(r.date))}</td><td><span class="badge">${esc(r.status)}</span></td><td>${esc(r.note||'—')}</td></tr>`).join('')||'<tr><td colspan="4" class="text-center text-slate-400">Sin registros en el mes seleccionado.</td></tr>'}</tbody></table>`}
     function openAttendanceDay(date){$('attDate').value=date;renderAttendance();renderAttendanceHistory();document.querySelector('#attRosterBody')?.closest('.panel')?.scrollIntoView({behavior:'smooth',block:'start'})}
     async function deleteAttendanceDay(date){const courseId=$('attCourse').value,rows=attendanceSessionRows(courseId,date);if(!rows.length)return;if(!confirm(`¿Eliminar el pase de lista del ${fmtDate(date)} completo? Se borrarán ${rows.length} registros.`))return;asistencias=asistencias.filter(a=>!(String(a.courseId)===String(courseId)&&a.date===date));await Promise.all(rows.map(r=>dbDelete('asistencias',r.id)));await markDirty();renderAttendance();renderAttendanceHistory();toast('Pase de lista eliminado.','success')}
@@ -1127,8 +1337,8 @@ José Rodríguez"></textarea></div>
       renderWorkspaceRoster();renderWorkspaceUpcoming();renderWorkspaceLogs();renderWorkspaceInstruments();
     }
     function renderWorkspaceRoster(){const m=materiaById($('workspaceMateria')?.value),head=$('wsRosterHead'),body=$('wsRosterBody');if(!m||!head||!body)return;const q=($('workspaceSearch').value||'').toLowerCase(),roster=studentsForCourse(m.cursoId).filter(s=>s.nombre.toLowerCase().includes(q)),isETP=workspaceIsETP(m);body.innerHTML='';
-      if(isETP){head.innerHTML='<tr><th>No.</th><th>Estudiante</th><th>Asistencia</th><th>RA</th><th>Total</th><th>Situación</th><th></th></tr>';roster.forEach((st,i)=>{const a=attendanceStatsForStudent(st.id),r=raSummaryForStudent(st,m);body.innerHTML+=`<tr><td>${esc(st.numero||i+1)}</td><td class="font-semibold">${esc(st.nombre)}</td><td>${a.pct==null?'—':a.pct.toFixed(1)+'%'}</td><td>${r.complete}/${r.defs.length}</td><td class="font-extrabold">${r.ready?r.total.toFixed(1):'—'}</td><td><span class="${r.status==='Aprobado'?'score-pass':r.status==='Reprobado'?'score-fail':'text-slate-500 font-bold'}">${r.status}</span></td><td><button class="text-indigo-600" onclick="openStudentReport(${JSON.stringify(st.id)},${JSON.stringify(m.id)})" title="Reporte"><i class="fa-solid fa-chart-column"></i></button></td></tr>`})}
-      else{head.innerHTML='<tr><th>No.</th><th>Estudiante</th><th>Asistencia</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>Prom.</th><th></th></tr>';roster.forEach((st,i)=>{const a=attendanceStatsForStudent(st.id),cs=compSummaryForStudent(st,m);body.innerHTML+=`<tr><td>${esc(st.numero||i+1)}</td><td class="font-semibold">${esc(st.nombre)}</td><td>${a.pct==null?'—':a.pct.toFixed(1)+'%'}</td>${cs.periods.map(p=>`<td>${cs.avgs[p]==null?'—':cs.avgs[p].toFixed(1)}</td>`).join('')}<td class="font-extrabold">${cs.overall==null?'—':cs.overall.toFixed(1)}</td><td><button class="text-indigo-600" onclick="openStudentReport(${JSON.stringify(st.id)},${JSON.stringify(m.id)})" title="Reporte"><i class="fa-solid fa-chart-column"></i></button></td></tr>`})}
+      if(isETP){head.innerHTML='<tr><th>No.</th><th>Estudiante</th><th>Asistencia</th><th>RA</th><th>Total</th><th>Situación</th><th></th></tr>';roster.forEach((st,i)=>{const a=attendanceStatsForStudent(st.id),r=raSummaryForStudent(st,m);body.innerHTML+=`<tr><td>${esc(st.numero||i+1)}</td><td class="font-semibold">${esc(st.nombre)}</td><td>${a.pct==null?'—':a.pct.toFixed(1)+'%'}</td><td>${r.complete}/${r.defs.length}</td><td class="font-extrabold">${r.ready?r.total.toFixed(1):'—'}</td><td><span class="${r.status==='Aprobado'?'score-pass':r.status==='Reprobado'?'score-fail':'text-slate-500 font-bold'}">${r.status}</span></td><td><button class="text-indigo-600" onclick="openStudentReport(${JSON.stringify(st.id)},${JSON.stringify(m.id)})" title="Reporte" aria-label="Reporte"><i class="fa-solid fa-chart-column"></i></button></td></tr>`})}
+      else{head.innerHTML='<tr><th>No.</th><th>Estudiante</th><th>Asistencia</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>Prom.</th><th></th></tr>';roster.forEach((st,i)=>{const a=attendanceStatsForStudent(st.id),cs=compSummaryForStudent(st,m);body.innerHTML+=`<tr><td>${esc(st.numero||i+1)}</td><td class="font-semibold">${esc(st.nombre)}</td><td>${a.pct==null?'—':a.pct.toFixed(1)+'%'}</td>${cs.periods.map(p=>`<td>${cs.avgs[p]==null?'—':cs.avgs[p].toFixed(1)}</td>`).join('')}<td class="font-extrabold">${cs.overall==null?'—':cs.overall.toFixed(1)}</td><td><button class="text-indigo-600" onclick="openStudentReport(${JSON.stringify(st.id)},${JSON.stringify(m.id)})" title="Reporte" aria-label="Reporte"><i class="fa-solid fa-chart-column"></i></button></td></tr>`})}
       if(!roster.length)body.innerHTML='<tr><td colspan="9" class="text-center text-slate-400">No hay estudiantes.</td></tr>';
     }
     function renderWorkspaceUpcoming(){const m=materiaById($('workspaceMateria')?.value),box=$('wsUpcoming');if(!m||!box)return;const today=todayIso(),acts=actividades.filter(a=>String(resolveActivityMateria(a)?.id)===String(m.id)).map(a=>({date:a.date,title:`${a.code||'Actividad'} · ${a.title}`,category:'actividad',raCode:a.raCode,conflict:isNoClassDate(a.date),module:true})),school=calendario.filter(e=>(e.end||e.start)>=today).map(e=>({date:e.start,title:e.title,category:e.category,official:e.official,noClass:e.noClass,module:false})),rows=[...acts,...school].filter(x=>x.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,10);box.innerHTML=rows.map(x=>`<div class="border rounded-lg p-3"><div class="flex justify-between gap-3"><strong class="text-sm">${esc(x.title)}</strong><span class="text-xs whitespace-nowrap">${esc(fmtDate(x.date))}</span></div><div class="mt-1">${x.module?(x.conflict?'<span class="warning-chip">No lectivo</span>':'<span class="ok-chip">Actividad del módulo</span>'):`<span class="cal-legend ${calendarClass(x.category)}">${x.official?'MINERD':'Centro'} · ${esc(x.category)}</span>`} ${x.raCode?`<span class="badge ml-1">${esc(x.raCode)}</span>`:''}</div></div>`).join('')||'<p class="text-xs text-slate-400">No hay actividades ni fechas próximas registradas.</p>'}
@@ -1342,7 +1552,26 @@ ${data}
     async function initApp(){try{await openDB();await migrateOrSeed();await loadState();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});await handleMicrosoftCallback();renderAll();setupConnectivity();setupPWA();updateAuthUI()}catch(e){console.error(e);toast('No se pudo iniciar la base local: '+e.message,'error')}}
     async function bootAuth(){showAuthGate('Preparando el inicio de sesión…');const ready=await waitForGoogleIdentity();const b=$('googleLoginButton');if(b)b.disabled=!ready;if(!ready){setAuthStatus('No se pudo cargar Google Identity Services. Revisa tu conexión y recarga.','error');return}const restored=await tryRestoreGoogleSession();if(restored)await unlockApplication();else{showAuthGate('Inicia sesión con una cuenta Google autorizada para continuar.');if(b)b.disabled=false}}
     bootAuth();
-  </script>
+  
+
+    // V10 · mejoras semánticas y de interacción UI/UX Pro Max.
+    function applyV10Accessibility(){
+      document.querySelectorAll('button[title]:not([aria-label])').forEach(el=>el.setAttribute('aria-label',el.getAttribute('title')));
+      document.querySelectorAll('button i, a i').forEach(icon=>{
+        const parent=icon.parentElement;
+        if(parent && (parent.textContent||'').trim()) icon.setAttribute('aria-hidden','true');
+      });
+      document.querySelectorAll('input,select,textarea').forEach(el=>{
+        if(!el.id || el.getAttribute('aria-label')) return;
+        const safeId=(window.CSS&&CSS.escape)?CSS.escape(el.id):el.id.replace(/[^a-zA-Z0-9_-]/g,'');
+        const label=document.querySelector(`label[for="${safeId}"]`);
+        if(label) return;
+        const ph=el.getAttribute('placeholder');
+        if(ph) el.setAttribute('aria-label',ph);
+      });
+    }
+    window.addEventListener('DOMContentLoaded',applyV10Accessibility,{once:true});
+</script>
 
 </body>
 </html>
