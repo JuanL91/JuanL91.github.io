@@ -47,3 +47,5 @@ jobs:
           fi
           git commit -m 'Publicar AulaGestion RD V10 UI UX Pro Max [skip ci]'
           git push origin main
+
+# trigger-v10-20260915
