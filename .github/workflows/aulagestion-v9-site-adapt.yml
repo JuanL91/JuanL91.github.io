@@ -1,0 +1,116 @@
+name: Adaptar AulaGestion RD V9 desde version ChatGPT Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/aulagestion-v9-site-adapt.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  adapt-v9:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Adaptar interfaz conservando funciones V8
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index=Path('aulagestion-rd/index.html')
+          text=index.read_text(encoding='utf-8')
+
+          required_before=[
+              'const APP_VERSION = 8;',
+              'id="authGate"',
+              'id="section-reportes"',
+              'id="attendanceHistoryPanel"',
+              'id="instrumentEvaluatorPanel"',
+              'buildAttendanceOfficialReport',
+              'buildRAOfficialReport',
+              'buildRPGGroupedReport',
+              '<h1 class="text-2xl font-bold text-slate-800">Panel docente</h1>',
+          ]
+          for token in required_before:
+              assert token in text, f'Falta token base antes de adaptar: {token}'
+
+          text=text.replace('<title>AulaGestión RD V8 | Gestión Docente Integral</title>',
+                            '<title>AulaGestión RD V9 | Gestión Docente Integral</title>',1)
+          text=text.replace('V8 · reportes oficiales + asistencia por módulo',
+                            'V9 · interfaz unificada + accesos rápidos',1)
+          text=text.replace('const APP_VERSION = 8;','const APP_VERSION = 9;',1)
+
+          old_intro='''        <h1 class="text-2xl font-bold text-slate-800">Panel docente</h1>\n        <p class="text-xs text-slate-500">Tus datos se guardan primero en este dispositivo. La nube funciona como respaldo y sincronización opcional.</p>'''
+          new_intro='''        <h1 class="text-2xl font-bold text-slate-800">Panel docente</h1>\n        <p class="text-sm font-semibold text-slate-600 mt-1">Tu espacio de trabajo docente</p>\n        <p class="text-xs text-slate-500 mt-1">Tus datos se guardan primero en este dispositivo. La nube funciona como respaldo y sincronización opcional.</p>'''
+          assert old_intro in text, 'No se encontró introducción del dashboard.'
+          text=text.replace(old_intro,new_intro,1)
+
+          marker='''      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">\n        <div class="metric-card"><div><span id="card-estudiantes-count"'''
+          assert marker in text, 'No se encontró inicio de métricas del dashboard.'
+          quick='''      <div id="dashboardQuickActions" class="grid grid-cols-1 md:grid-cols-3 gap-4">\n        <button type="button" onclick="showSection('asistencia')" class="group text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-indigo-200 transition">\n          <div class="flex items-center gap-4">\n            <span class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover:bg-indigo-600 group-hover:text-white transition"><i class="fa-solid fa-user-check"></i></span>\n            <div><h2 class="font-extrabold text-slate-800">Pasar asistencia</h2><p class="text-xs text-slate-500 mt-1">Registrar la jornada del grupo</p></div>\n          </div>\n        </button>\n        <button type="button" onclick="showSection('evaluacion')" class="group text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-200 transition">\n          <div class="flex items-center gap-4">\n            <span class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-emerald-600 group-hover:text-white transition"><i class="fa-solid fa-clipboard-check"></i></span>\n            <div><h2 class="font-extrabold text-slate-800">Evaluar aprendizajes</h2><p class="text-xs text-slate-500 mt-1">RA y competencias</p></div>\n          </div>\n        </button>\n        <button type="button" onclick="showSection('reportes')" class="group text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-sky-200 transition">\n          <div class="flex items-center gap-4">\n            <span class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl group-hover:bg-sky-600 group-hover:text-white transition"><i class="fa-solid fa-file-lines"></i></span>\n            <div><h2 class="font-extrabold text-slate-800">Preparar un reporte</h2><p class="text-xs text-slate-500 mt-1">Asistencia y calificaciones</p></div>\n          </div>\n        </button>\n      </div>\n\n      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">\n        <div class="metric-card"><div><span id="card-estudiantes-count"'''
+          text=text.replace(marker,quick,1)
+
+          required_after=[
+              'const APP_VERSION = 9;',
+              'id="dashboardQuickActions"',
+              'Tu espacio de trabajo docente',
+              "showSection('asistencia')",
+              "showSection('evaluacion')",
+              "showSection('reportes')",
+              'id="authGate"',
+              'id="section-reportes"',
+              'id="attendanceHistoryPanel"',
+              'id="instrumentEvaluatorPanel"',
+              'buildAttendanceOfficialReport',
+              'buildRAOfficialReport',
+              'buildRPGGroupedReport',
+          ]
+          for token in required_after:
+              assert token in text, f'Validación V9 falló: {token}'
+
+          index.write_text(text,encoding='utf-8')
+
+          manifest=Path('aulagestion-rd/manifest.webmanifest')
+          m=manifest.read_text(encoding='utf-8')
+          assert 'AulaGestión RD V8' in m
+          m=m.replace('AulaGestión RD V8','AulaGestión RD V9',1)
+          manifest.write_text(m,encoding='utf-8')
+
+          sw=Path('aulagestion-rd/sw.js')
+          s=sw.read_text(encoding='utf-8')
+          assert "const CACHE='aulagestion-rd-v8-20260902';" in s
+          s=s.replace("const CACHE='aulagestion-rd-v8-20260902';","const CACHE='aulagestion-rd-v9-20260915';",1)
+          sw.write_text(s,encoding='utf-8')
+
+          print('AulaGestión V9 adaptada:',len(text.encode('utf-8')),'bytes')
+          PY
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('aulagestion-rd/index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?: [^>]*)?>([\s\S]*?)</script>',text)
+          inline=[s for s in scripts if s.strip()]
+          assert inline, 'No hay JS interno para validar.'
+          Path('/tmp/aulagestion-v9-inline.js').write_text(inline[-1],encoding='utf-8')
+          PY
+          node --check /tmp/aulagestion-v9-inline.js
+
+      - name: Publicar V9
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add aulagestion-rd/index.html aulagestion-rd/manifest.webmanifest aulagestion-rd/sw.js
+          git diff --cached --quiet && { echo 'No hay cambios que publicar'; exit 0; }
+          git commit -m 'Publicar AulaGestion RD V9: adaptar experiencia ChatGPT Site [skip ci]'
+          git push origin main
