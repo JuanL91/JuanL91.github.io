@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#4f46e5">
   <meta name="description" content="AulaGestión RD - Gestión docente local-first para Técnico Profesional, Artes y Académica General.">
-  <title>AulaGestión RD V8 | Gestión Docente Integral</title>
+  <title>AulaGestión RD V9 | Gestión Docente Integral</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -56,7 +56,7 @@
       <div>
         <div class="flex items-center gap-3">
           <span class="text-sm font-extrabold text-slate-800">AulaGestión RD</span>
-          <span class="text-[10px] uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-100">V8 · reportes oficiales + asistencia por módulo</span>
+          <span class="text-[10px] uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full border border-indigo-100">V9 · interfaz unificada + accesos rápidos</span>
         </div>
         <p class="text-xs text-slate-500 mt-0.5">Técnico Profesional · Modalidad en Artes · Académica General</p>
       </div>
@@ -79,11 +79,33 @@
       <div>
         <span class="text-xs font-bold text-indigo-600 tracking-wider uppercase">AULAGESTIÓN RD</span>
         <h1 class="text-2xl font-bold text-slate-800">Panel docente</h1>
-        <p class="text-xs text-slate-500">Tus datos se guardan primero en este dispositivo. La nube funciona como respaldo y sincronización opcional.</p>
+        <p class="text-sm font-semibold text-slate-600 mt-1">Tu espacio de trabajo docente</p>
+        <p class="text-xs text-slate-500 mt-1">Tus datos se guardan primero en este dispositivo. La nube funciona como respaldo y sincronización opcional.</p>
       </div>
 
       <div id="offlineNotice" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
         <i class="fa-solid fa-wifi mr-2"></i>Estás sin conexión. Puedes seguir trabajando; los cambios quedan guardados localmente.
+      </div>
+
+      <div id="dashboardQuickActions" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button type="button" onclick="showSection('asistencia')" class="group text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-indigo-200 transition">
+          <div class="flex items-center gap-4">
+            <span class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover:bg-indigo-600 group-hover:text-white transition"><i class="fa-solid fa-user-check"></i></span>
+            <div><h2 class="font-extrabold text-slate-800">Pasar asistencia</h2><p class="text-xs text-slate-500 mt-1">Registrar la jornada del grupo</p></div>
+          </div>
+        </button>
+        <button type="button" onclick="showSection('evaluacion')" class="group text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-200 transition">
+          <div class="flex items-center gap-4">
+            <span class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-emerald-600 group-hover:text-white transition"><i class="fa-solid fa-clipboard-check"></i></span>
+            <div><h2 class="font-extrabold text-slate-800">Evaluar aprendizajes</h2><p class="text-xs text-slate-500 mt-1">RA y competencias</p></div>
+          </div>
+        </button>
+        <button type="button" onclick="showSection('reportes')" class="group text-left bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-sky-200 transition">
+          <div class="flex items-center gap-4">
+            <span class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl group-hover:bg-sky-600 group-hover:text-white transition"><i class="fa-solid fa-file-lines"></i></span>
+            <div><h2 class="font-extrabold text-slate-800">Preparar un reporte</h2><p class="text-xs text-slate-500 mt-1">Asistencia y calificaciones</p></div>
+          </div>
+        </button>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
@@ -672,7 +694,7 @@ José Rodríguez"></textarea></div>
   <script>
     'use strict';
 
-    const APP_VERSION = 8;
+    const APP_VERSION = 9;
     const GOOGLE_CLIENT_ID = '1027532565910-2ego4k76sms9fcp9p1hkopgnkdcvbjig.apps.googleusercontent.com';
     const GOOGLE_SCOPES = 'openid email profile https://www.googleapis.com/auth/drive.appdata';
     const AUTH_IDLE_MS = 30*60*1000;
