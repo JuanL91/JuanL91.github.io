@@ -1,0 +1,49 @@
+name: AulaGestion RD V10
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/aulagestion-v10-run.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-v10:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply UI UX Pro Max
+        run: python .github/scripts/aulagestion_v10_uiux.py
+
+      - name: Validate JavaScript
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('aulagestion-rd/index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?: [^>]*)?>([\s\S]*?)</script>',text)
+          inline=[s for s in scripts if s.strip()]
+          assert inline
+          Path('/tmp/aulagestion-v10-inline.js').write_text(inline[-1],encoding='utf-8')
+          PY
+          node --check /tmp/aulagestion-v10-inline.js
+
+      - name: Commit V10
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add aulagestion-rd/index.html aulagestion-rd/manifest.webmanifest aulagestion-rd/sw.js aulagestion-rd/design-system/MASTER.md
+          if git diff --cached --quiet; then
+            echo 'No changes to publish'
+            exit 0
+          fi
+          git commit -m 'Publicar AulaGestion RD V10 UI UX Pro Max [skip ci]'
+          git push origin main
