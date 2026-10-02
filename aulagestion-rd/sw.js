@@ -1,5 +1,5 @@
-const CACHE='aulagestion-rd-v10-20260915';
-const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg'];
+const CACHE='aulagestion-rd-v10.1-20261002';
+const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg','./didactica-data.js?v=10.1','./didactica-registros.js?v=10.1'];
 const REMOTE=['https://cdn.tailwindcss.com','https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css','https://cdn.jsdelivr.net/npm/chart.js','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(async c=>{await c.addAll(CORE);await Promise.allSettled(REMOTE.map(url=>c.add(url)));}).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
